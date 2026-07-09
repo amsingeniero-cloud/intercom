@@ -1,0 +1,15 @@
+{
+  "name": "intercom-signaling",
+  "version": "1.0.0",
+  "description": "Servidor de senializacion WebRTC para Intercom (solo relay de mensajes, no audio)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

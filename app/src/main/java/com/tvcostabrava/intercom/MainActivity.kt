@@ -12,17 +12,13 @@ import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -37,8 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -85,7 +80,7 @@ class MainActivity : ComponentActivity() {
             }
 
             MaterialTheme {
-                Surface(color = Color(0xFF121414)) {
+                Surface(color = RetroColors.Chassis) {
                     if (showSettings) {
                         SettingsScreen(
                             initialUrl = SettingsStore.getServerUrl(this@MainActivity),
@@ -96,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             },
                         )
                     } else {
-                        IntercomScreen(
+                        RetroWalkieScreen(
                             onTalkPressed = { pressed -> service?.setPttPressed(pressed) },
                             onHandsFreeToggled = { enabled -> service?.setHandsFree(enabled) },
                             onOpenSettings = { showSettings = true },
@@ -127,103 +122,6 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun IntercomScreen(
-    onTalkPressed: (Boolean) -> Unit,
-    onHandsFreeToggled: (Boolean) -> Unit,
-    onOpenSettings: () -> Unit,
-) {
-    var isTalking by remember { mutableStateOf(false) }
-    var handsFree by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "Ajustes",
-            color = Color(0xFF8A8D8D),
-            fontSize = 14.sp,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = { onOpenSettings() })
-                },
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 64.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top,
-        ) {
-            val talkColor = if (isTalking || handsFree) Color(0xFF27AE60) else Color(0xFF2ECC71)
-
-            Surface(
-                shape = CircleShape,
-                color = talkColor,
-                modifier = Modifier
-                    .size(200.dp)
-                    .pointerInput(handsFree) {
-                        detectTapGestures(
-                            onPress = {
-                                if (!handsFree) {
-                                    isTalking = true
-                                    onTalkPressed(true)
-                                    tryAwaitRelease()
-                                    isTalking = false
-                                    onTalkPressed(false)
-                                }
-                            },
-                        )
-                    },
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = if (handsFree) "HABLANDO" else "HABLAR",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = if (handsFree) Color(0xFF2ECC71) else Color(0xFF2A2D2D),
-                modifier = Modifier
-                    .padding(top = 40.dp)
-                    .size(width = 220.dp, height = 64.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = {
-                                handsFree = !handsFree
-                                onHandsFreeToggled(handsFree)
-                                if (!handsFree) onTalkPressed(false)
-                            },
-                        )
-                    },
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = "MANOS LIBRES",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
     var url by remember { mutableStateOf(initialUrl) }
 
@@ -235,15 +133,17 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Servidor de señalización",
-            color = Color.White,
+            text = "SERVIDOR DE SEÑALIZACIÓN",
+            color = RetroColors.OnSurface,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.5.sp,
         )
         Text(
             text = "Pega aquí la URL wss:// de tu servidor (Render u otro)",
-            color = Color(0xFF8A8D8D),
+            color = RetroColors.OnSurfaceVariant,
             fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
         )
 
@@ -251,17 +151,24 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
             value = url,
             onValueChange = { url = it },
             singleLine = true,
-            placeholder = { Text("wss://tu-servidor.onrender.com", color = Color(0xFF8A8D8D)) },
+            textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace),
+            placeholder = {
+                Text(
+                    "wss://tu-servidor.onrender.com",
+                    color = RetroColors.OnSurfaceVariant,
+                    fontFamily = FontFamily.Monospace,
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Uri,
                 autoCorrect = false,
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                cursorColor = Color.White,
-                focusedBorderColor = Color(0xFF2ECC71),
-                unfocusedBorderColor = Color(0xFF8A8D8D),
+                focusedTextColor = RetroColors.OnSurface,
+                unfocusedTextColor = RetroColors.OnSurface,
+                cursorColor = RetroColors.PrimaryOrange,
+                focusedBorderColor = RetroColors.PrimaryOrange,
+                unfocusedBorderColor = RetroColors.Outline,
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -269,12 +176,17 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
         Button(
             onClick = { onSave(url.trim()) },
             enabled = url.isNotBlank(),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = RetroColors.PrimaryOrange,
+                contentColor = RetroColors.OnPrimary,
+            ),
+            shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .padding(top = 24.dp)
                 .fillMaxWidth()
                 .height(52.dp),
         ) {
-            Text("GUARDAR")
+            Text("GUARDAR", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
     }
 }

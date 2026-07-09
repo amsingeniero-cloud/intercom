@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -250,10 +251,17 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
             value = url,
             onValueChange = { url = it },
             singleLine = true,
-            placeholder = { Text("wss://tu-servidor.onrender.com") },
+            placeholder = { Text("wss://tu-servidor.onrender.com", color = Color(0xFF8A8D8D)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Uri,
                 autoCorrect = false,
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color.White,
+                focusedBorderColor = Color(0xFF2ECC71),
+                unfocusedBorderColor = Color(0xFF8A8D8D),
             ),
             modifier = Modifier.fillMaxWidth(),
         )

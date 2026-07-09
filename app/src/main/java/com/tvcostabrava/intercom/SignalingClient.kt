@@ -35,7 +35,12 @@ class SignalingClient(
     private var socket: WebSocket? = null
 
     fun connect() {
-        val request = Request.Builder().url(serverUrl).build()
+        val request = try {
+            Request.Builder().url(serverUrl).build()
+        } catch (e: IllegalArgumentException) {
+            listener.onDisconnected()
+            return
+        }
         socket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 val join = JSONObject().put("type", "join").put("id", myId)

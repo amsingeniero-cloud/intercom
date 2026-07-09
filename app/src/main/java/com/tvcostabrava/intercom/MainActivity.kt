@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
             }
 
             MaterialTheme {
-                Surface(color = RetroColors.Chassis) {
+                Surface(color = RetroColors.Background) {
                     if (showSettings) {
                         SettingsScreen(
                             initialUrl = SettingsStore.getServerUrl(this@MainActivity),
@@ -166,8 +166,8 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = RetroColors.OnSurface,
                 unfocusedTextColor = RetroColors.OnSurface,
-                cursorColor = RetroColors.PrimaryOrange,
-                focusedBorderColor = RetroColors.PrimaryOrange,
+                cursorColor = RetroColors.PrimaryContainer,
+                focusedBorderColor = RetroColors.PrimaryContainer,
                 unfocusedBorderColor = RetroColors.Outline,
             ),
             modifier = Modifier.fillMaxWidth(),
@@ -177,8 +177,8 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
             onClick = { onSave(url.trim()) },
             enabled = url.isNotBlank(),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = RetroColors.PrimaryOrange,
-                contentColor = RetroColors.OnPrimary,
+                containerColor = RetroColors.PrimaryContainer,
+                contentColor = RetroColors.OnPrimaryContainer,
             ),
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier

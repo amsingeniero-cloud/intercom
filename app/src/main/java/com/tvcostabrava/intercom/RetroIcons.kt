@@ -10,6 +10,33 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/** Puntito decorativo de esquina (equivalente al "radio_button_checked" opacity-40 del mockup). */
+@Composable
+fun CornerDot(color: Color = Color.White, size: Dp = 8.dp, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(size)) {
+        drawCircle(
+            color = color.copy(alpha = 0.4f),
+            radius = this.size.minDimension / 2f - this.size.minDimension * 0.1f,
+            style = Stroke(width = this.size.minDimension * 0.15f),
+        )
+    }
+}
+
+/** Icono decorativo de tornillo ("settings_b_roll") para las esquinas del chasis. */
+@Composable
+fun ScrewIcon(color: Color = Color.White, size: Dp = 14.dp, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(size)) {
+        val r = this.size.minDimension / 2f
+        drawCircle(color = color.copy(alpha = 0.3f), radius = r, style = Stroke(width = r * 0.3f))
+        drawLine(
+            color = color.copy(alpha = 0.3f),
+            start = Offset(this.size.width * 0.25f, this.size.height * 0.5f),
+            end = Offset(this.size.width * 0.75f, this.size.height * 0.5f),
+            strokeWidth = r * 0.3f,
+        )
+    }
+}
+
 /**
  * Iconos dibujados a mano con Canvas (sin depender de material-icons-extended)
  * para el look "radio industrial 80s" del diseño Stitch.

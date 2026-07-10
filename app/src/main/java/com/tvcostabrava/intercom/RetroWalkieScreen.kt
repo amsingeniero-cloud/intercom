@@ -315,44 +315,26 @@ private fun BrandModelRow() {
 private fun ChannelSwitchGrid(activeChannels: Set<String>, onToggle: (String) -> Unit) {
     val allDeptActive = activeChannels.containsAll(DEPARTMENT_CHANNELS.map { it.id })
 
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            DEPARTMENT_CHANNELS.take(3).forEach { channel ->
-                ChannelSwitch(
-                    label = channel.label,
-                    active = channel.id in activeChannels,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onToggle(channel.id) },
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            DEPARTMENT_CHANNELS.drop(3).forEach { channel ->
-                ChannelSwitch(
-                    label = channel.label,
-                    active = channel.id in activeChannels,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onToggle(channel.id) },
-                )
-            }
+        DEPARTMENT_CHANNELS.forEach { channel ->
             ChannelSwitch(
-                label = "TODOS",
-                active = allDeptActive,
+                label = channel.label,
+                active = channel.id in activeChannels,
                 modifier = Modifier.weight(1f),
-                onClick = { onToggle(TODOS_ID) },
+                onClick = { onToggle(channel.id) },
             )
         }
+        ChannelSwitch(
+            label = "TODOS",
+            active = allDeptActive,
+            modifier = Modifier.weight(1f),
+            onClick = { onToggle(TODOS_ID) },
+        )
     }
 }
 
@@ -372,8 +354,8 @@ private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = M
             contentDescription = label,
             contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
             modifier = Modifier
-                .width(46.dp)
-                .height(79.dp)
+                .width(40.dp)
+                .height(69.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { currentOnClick() })

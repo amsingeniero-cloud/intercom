@@ -239,6 +239,7 @@ private fun SpeakerLcdModule() {
                 .background(RetroColors.LcdBackground)
                 .border(2.dp, pal.surfaceVariant, RoundedCornerShape(6.dp))
                 .padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -248,7 +249,7 @@ private fun SpeakerLcdModule() {
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
                 modifier = Modifier
-                    .weight(1f)
+                    .width(110.dp)
                     .basicMarquee(),
             )
             Column(horizontalAlignment = Alignment.End) {

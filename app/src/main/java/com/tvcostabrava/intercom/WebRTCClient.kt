@@ -35,28 +35,19 @@ class WebRTCClient(
     private lateinit var audioSource: AudioSource
     private lateinit var peerConnectionFactory: PeerConnectionFactory
 
-    private val iceServers = listOf(
+    // Arranca solo con STUN; las credenciales TURN reales (metered.ca) llegan async
+    // via updateIceServers() -- ver TurnCredentialsFetcher e IntercomService.
+    private var iceServers: List<PeerConnection.IceServer> = listOf(
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
-        // TURN publico gratuito (Open Relay Project) para redes con NAT estricto / datos moviles.
-        // Se listan varias variantes (UDP/TCP, puertos 80/443) porque segun la red, alguna
-        // puede estar bloqueada; con varias, ICE prueba todas y usa la que funcione.
-        PeerConnection.IceServer.builder("turn:openrelay.metered.ca:80")
-            .setUsername("openrelayproject")
-            .setPassword("openrelayproject")
-            .createIceServer(),
-        PeerConnection.IceServer.builder("turn:openrelay.metered.ca:80?transport=tcp")
-            .setUsername("openrelayproject")
-            .setPassword("openrelayproject")
-            .createIceServer(),
-        PeerConnection.IceServer.builder("turn:openrelay.metered.ca:443")
-            .setUsername("openrelayproject")
-            .setPassword("openrelayproject")
-            .createIceServer(),
-        PeerConnection.IceServer.builder("turn:openrelay.metered.ca:443?transport=tcp")
-            .setUsername("openrelayproject")
-            .setPassword("openrelayproject")
-            .createIceServer(),
     )
+
+    /** Se llama cuando llegan las credenciales TURN reales, antes de conectar con nadie. */
+    fun updateIceServers(turnServers: List<PeerConnection.IceServer>) {
+        iceServers = listOf(
+            PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
+        ) + turnServers
+        Log.i(TAG, "updateIceServers: ${turnServers.size} servidores TURN")
+    }
 
     init {
         val initOptions = PeerConnectionFactory.InitializationOptions.builder(context)

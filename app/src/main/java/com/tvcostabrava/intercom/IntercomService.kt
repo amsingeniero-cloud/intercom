@@ -79,11 +79,32 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
 
         webRTCClient = WebRTCClient(applicationContext, this)
         signalingClient = SignalingClient(currentServerUrl(), myId, this)
-        signalingClient.connect()
+        fetchTurnCredentialsThenConnect(currentServerUrl())
     }
 
     private fun currentServerUrl(): String =
         SettingsStore.getServerUrl(this).ifBlank { BuildConfig.SIGNALING_URL }
+
+    /** El endpoint /turn-credentials vive en el mismo servidor de senializacion (wss:// -> https://). */
+    private fun turnCredentialsUrl(signalingUrl: String): String {
+        val httpBase = signalingUrl
+            .replaceFirst("wss://", "https://")
+            .replaceFirst("ws://", "http://")
+            .trimEnd('/')
+        return "$httpBase/turn-credentials"
+    }
+
+    /**
+     * Pide las credenciales TURN reales antes de conectar la senializacion, para que
+     * ya esten listas cuando lleguen los primeros peers y haya que negociar audio.
+     * Si el servidor no responde a tiempo (timeout 4s) o falla, sigue solo con STUN.
+     */
+    private fun fetchTurnCredentialsThenConnect(url: String) {
+        TurnCredentialsFetcher.fetch(turnCredentialsUrl(url)) { turnServers ->
+            webRTCClient.updateIceServers(turnServers)
+            signalingClient.connect()
+        }
+    }
 
     /**
      * Reconexion completa: cierra la senializacion, tira las conexiones WebRTC viejas
@@ -101,7 +122,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         applyMicState()
 
         signalingClient = SignalingClient(url, myId, this)
-        signalingClient.connect()
+        fetchTurnCredentialsThenConnect(url)
     }
 
     /** Llamado desde Ajustes cuando el usuario guarda una URL nueva: reconecta al vuelo. */

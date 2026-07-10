@@ -3,7 +3,35 @@ const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 8080;
 
+// Credenciales TURN reales (metered.ca). Se configuran como variables de entorno
+// en Render (Environment), nunca se suben al repo ni se embeben en la app.
+const METERED_SUBDOMAIN = process.env.METERED_SUBDOMAIN;
+const METERED_API_KEY = process.env.METERED_API_KEY;
+
+async function handleTurnCredentials(res) {
+  if (!METERED_SUBDOMAIN || !METERED_API_KEY) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'METERED_SUBDOMAIN / METERED_API_KEY no configuradas' }));
+    return;
+  }
+  try {
+    const url = `https://${METERED_SUBDOMAIN}/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`;
+    const response = await fetch(url);
+    const body = await response.text();
+    res.writeHead(response.status, { 'Content-Type': 'application/json' });
+    res.end(body);
+  } catch (err) {
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: String(err) }));
+  }
+}
+
 const server = http.createServer((req, res) => {
+  if (req.url === '/turn-credentials') {
+    handleTurnCredentials(res);
+    return;
+  }
+
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('intercom signaling ok');
 });

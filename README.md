@@ -36,6 +36,22 @@ tráfico; la primera conexión del día puede tardar 30-60s en despertar.
 Recomendable abrir la app un par de minutos antes de salir en directo, o
 dejar algo haciendo ping (p. ej. UptimeRobot gratis) al servicio.
 
+### TURN real (necesario para que funcione entre redes distintas)
+
+Sin esto, dos móviles en redes distintas (uno en WiFi, otro en datos) pueden
+no conseguir conectar el audio si alguna de las dos tiene NAT restrictivo
+(muy típico en 4G/5G). Hace falta un TURN de verdad, gratis en
+[metered.ca](https://www.metered.ca/tools/openrelay/):
+
+1. Crea una cuenta gratis, crea una "App" de tipo TURN. Te da un
+   **subdominio** (`tu-app.metered.live`) y una **API key**.
+2. En Render, en tu Web Service → **Environment**, añade estas dos variables:
+   - `METERED_SUBDOMAIN` = tu subdominio (p. ej. `ams_ingeniero.metered.live`)
+   - `METERED_API_KEY` = tu API key
+3. Render redepliega solo al guardar. La API key **nunca** va en el APK ni en
+   el repo: la app se la pide a tu servidor (`/turn-credentials`), y tu
+   servidor se la pide a metered.ca.
+
 ### Probar en local antes de desplegar
 
 Para iterar rápido sin depender de Render:

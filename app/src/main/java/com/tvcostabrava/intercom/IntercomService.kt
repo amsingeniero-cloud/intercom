@@ -150,7 +150,9 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     }
 
     private fun applyMicState() {
-        webRTCClient.setMicEnabled(pttPressed || handsFreeOn)
+        val enabled = pttPressed || handsFreeOn
+        Log.i(TAG, "applyMicState: enabled=$enabled (pttPressed=$pttPressed, handsFreeOn=$handsFreeOn), peers=${connectedPeers.size}")
+        webRTCClient.setMicEnabled(enabled)
     }
 
     // ---- WebRTCClient.SignalingCallback ----

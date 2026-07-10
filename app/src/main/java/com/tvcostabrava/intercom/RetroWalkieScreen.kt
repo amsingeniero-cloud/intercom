@@ -359,6 +359,7 @@ private fun ChannelSwitchGrid(activeChannels: Set<String>, onToggle: (String) ->
 @Composable
 private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val pal = LocalRetroPalette.current
+    val currentOnClick by androidx.compose.runtime.rememberUpdatedState(onClick)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -382,7 +383,7 @@ private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = M
                     RoundedCornerShape(6.dp),
                 )
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = { onClick() })
+                    detectTapGestures(onTap = { currentOnClick() })
                 },
             contentAlignment = Alignment.Center,
         ) {

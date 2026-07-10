@@ -7,6 +7,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -72,70 +76,74 @@ fun RetroWalkieScreen(
                 .fillMaxSize()
                 .background(RetroColors.SurfaceContainerHigh),
         ) {
-            ChassisHeader(onOpenSettings = onOpenSettings)
-
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                SpeakerLcdModule()
-                BrandModelRow()
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+                    .verticalScroll(rememberScrollState()),
             ) {
-                LedPillRow(talking = talking)
+                ChassisHeader(onOpenSettings = onOpenSettings)
 
-                Spacer(modifier = Modifier.height(28.dp))
-                TalkButton(
-                    talking = talking,
-                    enabledForPress = !handsFree,
-                    onPress = { pressed ->
-                        isTalking = pressed
-                        onTalkPressed(pressed)
-                    },
-                )
-                Text(
-                    text = "PRESS TO TALK",
-                    color = RetroColors.OutlineVariant,
-                    fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp,
-                    modifier = Modifier.padding(top = 10.dp),
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-                HandsFreeButton(
-                    active = handsFree,
-                    onToggle = {
-                        handsFree = !handsFree
-                        onHandsFreeToggled(handsFree)
-                        if (!handsFree) onTalkPressed(false)
-                    },
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 8.dp),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    DecorLine()
-                    Text(
-                        text = "HANDS FREE MODE",
-                        color = RetroColors.OnSurfaceVariant.copy(alpha = 0.4f),
-                        fontSize = 9.sp,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 1.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp),
+                    SpeakerLcdModule()
+                    BrandModelRow()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    LedPillRow(talking = talking)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TalkButton(
+                        talking = talking,
+                        enabledForPress = !handsFree,
+                        onPress = { pressed ->
+                            isTalking = pressed
+                            onTalkPressed(pressed)
+                        },
                     )
-                    DecorLine()
+                    Text(
+                        text = "PRESS TO TALK",
+                        color = RetroColors.OutlineVariant,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HandsFreeButton(
+                        active = handsFree,
+                        onToggle = {
+                            handsFree = !handsFree
+                            onHandsFreeToggled(handsFree)
+                            if (!handsFree) onTalkPressed(false)
+                        },
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
+                    ) {
+                        DecorLine()
+                        Text(
+                            text = "HANDS FREE MODE",
+                            color = RetroColors.OnSurfaceVariant.copy(alpha = 0.4f),
+                            fontSize = 9.sp,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        )
+                        DecorLine()
+                    }
                 }
             }
 
@@ -199,6 +207,7 @@ private fun ChassisHeader(onOpenSettings: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SpeakerLcdModule() {
     Box(
@@ -231,7 +240,9 @@ private fun SpeakerLcdModule() {
                 fontSize = 19.sp,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .basicMarquee(),
             )
             Column(horizontalAlignment = Alignment.End) {
                 Text(
@@ -443,8 +454,7 @@ private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(RetroColors.SurfaceContainerHigh)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .padding(horizontal = 6.dp, vertical = 10.dp),
         ) {
             items.forEachIndexed { i, label ->
                 val active = i == selected
@@ -452,9 +462,10 @@ private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
+                        .weight(1f)
                         .clip(RoundedCornerShape(10.dp))
                         .then(if (active) Modifier.background(RetroColors.PrimaryContainer) else Modifier)
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .padding(horizontal = 6.dp, vertical = 6.dp)
                         .pointerInput(i) {
                             detectTapGestures(onTap = { onSelect(i) })
                         },
@@ -469,9 +480,11 @@ private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
                     Text(
                         text = label,
                         color = tint.copy(alpha = if (active) 1f else 0.8f),
-                        fontSize = 8.sp,
+                        fontSize = 7.5.sp,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = 0.5.sp,
+                        letterSpacing = 0.3.sp,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 }
             }

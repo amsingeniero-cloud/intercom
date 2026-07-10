@@ -33,4 +33,7 @@ object RetroColors {
 
     // Pantalla LCD
     val LcdBackground = Color(0xFF2D3528)
+
+    // Interruptor de canal en "solo" (mantener pulsado): unico canal activo mientras dura
+    val SoloBlue = Color(0xFF2563EB)
 }

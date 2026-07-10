@@ -63,6 +63,8 @@ fun RetroWalkieScreen(
     var isTalking by remember { mutableStateOf(false) }
     var handsFree by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
+    var soloedButton by remember { mutableStateOf<String?>(null) }
+    var preSoloChannels by remember { mutableStateOf<Set<String>?>(null) }
     val pal = LocalRetroPalette.current
 
     val talking = isTalking || handsFree
@@ -74,6 +76,19 @@ fun RetroWalkieScreen(
             else -> if (channelId in activeChannels) activeChannels - channelId else activeChannels + channelId
         }
         onChannelsChanged(newChannels)
+    }
+
+    // Mantener pulsado un interruptor: solo a ese canal mientras dure, restaura al soltar.
+    fun startSolo(buttonId: String, soloChannels: Set<String>) {
+        if (preSoloChannels == null) preSoloChannels = activeChannels
+        soloedButton = buttonId
+        onChannelsChanged(soloChannels)
+    }
+
+    fun endSolo() {
+        soloedButton = null
+        preSoloChannels?.let { onChannelsChanged(it) }
+        preSoloChannels = null
     }
 
     Box(
@@ -105,7 +120,10 @@ fun RetroWalkieScreen(
                     BrandModelRow()
                     ChannelSwitchGrid(
                         activeChannels = activeChannels,
+                        soloedButton = soloedButton,
                         onToggle = ::toggleChannel,
+                        onSoloStart = ::startSolo,
+                        onSoloEnd = ::endSolo,
                     )
                 }
 
@@ -313,8 +331,15 @@ private fun BrandModelRow() {
 }
 
 @Composable
-private fun ChannelSwitchGrid(activeChannels: Set<String>, onToggle: (String) -> Unit) {
-    val allDeptActive = activeChannels.containsAll(DEPARTMENT_CHANNELS.map { it.id })
+private fun ChannelSwitchGrid(
+    activeChannels: Set<String>,
+    soloedButton: String?,
+    onToggle: (String) -> Unit,
+    onSoloStart: (String, Set<String>) -> Unit,
+    onSoloEnd: () -> Unit,
+) {
+    val allDeptIds = DEPARTMENT_CHANNELS.map { it.id }.toSet()
+    val allDeptActive = activeChannels.containsAll(allDeptIds)
 
     Row(
         modifier = Modifier
@@ -326,46 +351,95 @@ private fun ChannelSwitchGrid(activeChannels: Set<String>, onToggle: (String) ->
             ChannelSwitch(
                 label = channel.shortLabel,
                 active = channel.id in activeChannels,
+                soloed = soloedButton == channel.id,
                 modifier = Modifier.weight(1f),
-                onClick = { onToggle(channel.id) },
+                onTap = { onToggle(channel.id) },
+                onSoloStart = { onSoloStart(channel.id, setOf(channel.id)) },
+                onSoloEnd = onSoloEnd,
             )
         }
         ChannelSwitch(
             label = "TODOS",
             active = allDeptActive,
+            soloed = soloedButton == TODOS_ID,
             modifier = Modifier.weight(1f),
-            onClick = { onToggle(TODOS_ID) },
+            onTap = { onToggle(TODOS_ID) },
+            onSoloStart = { onSoloStart(TODOS_ID, allDeptIds) },
+            onSoloEnd = onSoloEnd,
         )
     }
 }
 
 @Composable
-private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun ChannelSwitch(
+    label: String,
+    active: Boolean,
+    soloed: Boolean,
+    modifier: Modifier = Modifier,
+    onTap: () -> Unit,
+    onSoloStart: () -> Unit,
+    onSoloEnd: () -> Unit,
+) {
     val pal = LocalRetroPalette.current
-    val currentOnClick by androidx.compose.runtime.rememberUpdatedState(onClick)
+    val currentOnTap by androidx.compose.runtime.rememberUpdatedState(onTap)
+    val currentOnSoloStart by androidx.compose.runtime.rememberUpdatedState(onSoloStart)
+    val currentOnSoloEnd by androidx.compose.runtime.rememberUpdatedState(onSoloEnd)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
     ) {
-        androidx.compose.foundation.Image(
-            painter = androidx.compose.ui.res.painterResource(
-                id = if (active) R.drawable.channel_switch_on else R.drawable.channel_switch_off,
-            ),
-            contentDescription = label,
-            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+        Box(
             modifier = Modifier
                 .width(40.dp)
                 .height(69.dp)
                 .clip(RoundedCornerShape(6.dp))
+                .then(
+                    if (soloed) {
+                        Modifier
+                            .background(RetroColors.SoloBlue)
+                            .padding(3.dp)
+                    } else {
+                        Modifier
+                    },
+                )
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = { currentOnClick() })
+                    detectTapGestures(
+                        onPress = {
+                            val releasedInTime = kotlinx.coroutines.withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                tryAwaitRelease()
+                            }
+                            if (releasedInTime == null) {
+                                // paso el umbral de pulsacion larga y sigue pulsado: activar solo
+                                currentOnSoloStart()
+                                tryAwaitRelease()
+                                currentOnSoloEnd()
+                            } else if (releasedInTime) {
+                                currentOnTap()
+                            }
+                        },
+                    )
                 },
-        )
+        ) {
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(
+                    id = if (active) R.drawable.channel_switch_on else R.drawable.channel_switch_off,
+                ),
+                contentDescription = label,
+                contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+        }
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
-            color = if (active) RetroColors.PrimaryContainer else pal.onSurfaceVariant,
+            color = when {
+                soloed -> RetroColors.SoloBlue
+                active -> RetroColors.PrimaryContainer
+                else -> pal.onSurfaceVariant
+            },
             fontSize = 6.5.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,

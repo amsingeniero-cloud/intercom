@@ -323,7 +323,7 @@ private fun ChannelSwitchGrid(activeChannels: Set<String>, onToggle: (String) ->
     ) {
         DEPARTMENT_CHANNELS.forEach { channel ->
             ChannelSwitch(
-                label = channel.label,
+                label = channel.shortLabel,
                 active = channel.id in activeChannels,
                 modifier = Modifier.weight(1f),
                 onClick = { onToggle(channel.id) },
@@ -365,12 +365,13 @@ private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = M
         Text(
             text = label,
             color = if (active) RetroColors.PrimaryContainer else pal.onSurfaceVariant,
-            fontSize = 7.sp,
+            fontSize = 6.5.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.2.sp,
+            letterSpacing = 0.sp,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            maxLines = 2,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

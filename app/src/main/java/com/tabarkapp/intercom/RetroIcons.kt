@@ -1,4 +1,4 @@
-package com.tvcostabrava.intercom
+package com.tabarkapp.intercom
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size

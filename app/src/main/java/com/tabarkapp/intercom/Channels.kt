@@ -1,4 +1,4 @@
-package com.tvcostabrava.intercom
+package com.tabarkapp.intercom
 
 /**
  * Los 5 canales/departamentos, compartidos entre la pantalla principal y Ajustes.

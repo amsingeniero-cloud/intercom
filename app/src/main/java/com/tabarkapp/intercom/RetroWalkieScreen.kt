@@ -1,4 +1,4 @@
-package com.tvcostabrava.intercom
+package com.tabarkapp.intercom
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode

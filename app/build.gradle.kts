@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.tvcostabrava.intercom"
+    namespace = "com.tabarkapp.intercom"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.tvcostabrava.intercom"
+        applicationId = "com.tabarkapp.intercom"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

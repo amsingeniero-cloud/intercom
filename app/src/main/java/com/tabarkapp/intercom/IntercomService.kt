@@ -1,4 +1,4 @@
-package com.tvcostabrava.intercom
+package com.tabarkapp.intercom
 
 import android.app.Notification
 import android.app.NotificationChannel

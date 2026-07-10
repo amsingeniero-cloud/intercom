@@ -12,6 +12,11 @@ un único canal (party-line: todos oyen a todos).
 - **Servidor de señalización** (`server/`): solo pone en contacto a los móviles
   entre sí (intercambia SDP/ICE), nunca toca el audio. Es un WebSocket
   minúsculo en Node.
+- **Funciona con cualquier conexión** (LAN, WiFi, 4G/5G) sin configurar nada:
+  como la señalización va siempre por internet (Render), da igual qué red
+  use cada móvil en cada momento. Si el WebSocket se cae, reconecta solo con
+  backoff; y si el móvil cambia de red (WiFi → datos, cambia de WiFi, etc),
+  la app detecta el cambio y renegocia el audio automáticamente.
 
 ## 1. Desplegar el servidor de señalización (gratis, Render)
 

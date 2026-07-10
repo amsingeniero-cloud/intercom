@@ -8,6 +8,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -43,6 +45,24 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     private val _state = MutableStateFlow(IntercomState())
     val state: StateFlow<IntercomState> = _state
 
+    private lateinit var connectivityManager: ConnectivityManager
+    private var activeNetwork: Network? = null
+
+    /**
+     * Detecta cambios de red (WiFi <-> datos moviles, cambio de WiFi, etc) y fuerza
+     * una reconexion completa para que la app siga funcionando con la conexion que
+     * haya disponible en cada momento, sin tener que reabrir la app a mano.
+     */
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            val previous = activeNetwork
+            activeNetwork = network
+            if (previous != null && previous != network) {
+                restartConnection(currentServerUrl())
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         startForegroundNotification()
@@ -52,6 +72,9 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         @Suppress("DEPRECATION")
         audioManager.isSpeakerphoneOn = true
 
+        connectivityManager = getSystemService(ConnectivityManager::class.java)
+        connectivityManager.registerDefaultNetworkCallback(networkCallback)
+
         webRTCClient = WebRTCClient(applicationContext, this)
         signalingClient = SignalingClient(currentServerUrl(), myId, this)
         signalingClient.connect()
@@ -60,17 +83,28 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     private fun currentServerUrl(): String =
         SettingsStore.getServerUrl(this).ifBlank { BuildConfig.SIGNALING_URL }
 
-    /** Llamado desde Ajustes cuando el usuario guarda una URL nueva: reconecta al vuelo. */
-    fun updateServerUrl(newUrl: String) {
-        SettingsStore.setServerUrl(this, newUrl)
-
+    /**
+     * Reconexion completa: cierra la senializacion, tira las conexiones WebRTC viejas
+     * (atadas a la red anterior) y vuelve a unirse a la sala desde cero. Se usa tanto
+     * al cambiar la URL del servidor desde Ajustes como al cambiar de red.
+     */
+    private fun restartConnection(url: String) {
         signalingClient.disconnect()
-        connectedPeers.toList().forEach { webRTCClient.removePeer(it) }
+        webRTCClient.dispose()
         connectedPeers.clear()
         publishState()
 
-        signalingClient = SignalingClient(newUrl.ifBlank { currentServerUrl() }, myId, this)
+        webRTCClient = WebRTCClient(applicationContext, this)
+        applyMicState()
+
+        signalingClient = SignalingClient(url, myId, this)
         signalingClient.connect()
+    }
+
+    /** Llamado desde Ajustes cuando el usuario guarda una URL nueva: reconecta al vuelo. */
+    fun updateServerUrl(newUrl: String) {
+        SettingsStore.setServerUrl(this, newUrl)
+        restartConnection(newUrl.ifBlank { currentServerUrl() })
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -177,6 +211,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     }
 
     override fun onDestroy() {
+        connectivityManager.unregisterNetworkCallback(networkCallback)
         signalingClient.disconnect()
         webRTCClient.dispose()
         super.onDestroy()

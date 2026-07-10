@@ -1,5 +1,7 @@
 package com.tvcostabrava.intercom
 
+import android.os.Handler
+import android.os.Looper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -13,6 +15,10 @@ import java.util.concurrent.TimeUnit
  * Habla el protocolo minimo del server de senializacion (server/index.js):
  * join / existing-peers / peer-joined / signal / peer-left.
  * El server nunca ve audio, solo reenvia estos mensajes JSON.
+ *
+ * Se reconecta solo con backoff si la conexion se cae de forma inesperada
+ * (cambio de red, WiFi <-> datos moviles, perdida de cobertura, etc), para
+ * que la app siga funcionando sin importar que conexion haya en cada momento.
  */
 class SignalingClient(
     private val serverUrl: String,
@@ -32,9 +38,19 @@ class SignalingClient(
         .pingInterval(15, TimeUnit.SECONDS)
         .build()
 
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var socket: WebSocket? = null
+    private var manualDisconnect = false
+    private var reconnectAttempt = 0
 
     fun connect() {
+        manualDisconnect = false
+        reconnectAttempt = 0
+        mainHandler.removeCallbacksAndMessages(null)
+        attemptConnect()
+    }
+
+    private fun attemptConnect() {
         val request = try {
             Request.Builder().url(serverUrl).build()
         } catch (e: IllegalArgumentException) {
@@ -43,6 +59,7 @@ class SignalingClient(
         }
         socket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
+                reconnectAttempt = 0
                 val join = JSONObject().put("type", "join").put("id", myId)
                 webSocket.send(join.toString())
                 listener.onConnected()
@@ -54,12 +71,21 @@ class SignalingClient(
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 listener.onDisconnected()
+                scheduleReconnect()
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 listener.onDisconnected()
+                scheduleReconnect()
             }
         })
+    }
+
+    private fun scheduleReconnect() {
+        if (manualDisconnect) return
+        reconnectAttempt++
+        val delayMs = (2000L * reconnectAttempt).coerceAtMost(15_000L)
+        mainHandler.postDelayed({ if (!manualDisconnect) attemptConnect() }, delayMs)
     }
 
     private fun handleMessage(text: String) {
@@ -85,6 +111,8 @@ class SignalingClient(
     }
 
     fun disconnect() {
+        manualDisconnect = true
+        mainHandler.removeCallbacksAndMessages(null)
         socket?.close(1000, "bye")
         socket = null
     }

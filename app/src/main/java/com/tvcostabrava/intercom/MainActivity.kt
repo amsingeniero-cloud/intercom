@@ -104,6 +104,7 @@ class MainActivity : ComponentActivity() {
                                     service?.updateServerUrl(url)
                                     showSettings = false
                                 },
+                                onBack = { showSettings = false },
                             )
                         } else {
                             RetroWalkieScreen(
@@ -143,6 +144,7 @@ fun SettingsScreen(
     isDark: Boolean,
     onThemeChange: (Boolean) -> Unit,
     onSave: (String) -> Unit,
+    onBack: () -> Unit,
 ) {
     var url by remember { mutableStateOf(initialUrl) }
     val pal = LocalRetroPalette.current
@@ -224,6 +226,21 @@ fun SettingsScreen(
                 .height(52.dp),
         ) {
             Text("GUARDAR", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        }
+
+        Button(
+            onClick = onBack,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = pal.surfaceContainerHigh,
+                contentColor = pal.onSurface,
+            ),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .fillMaxWidth()
+                .height(52.dp),
+        ) {
+            Text("VOLVER", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
     }
 }

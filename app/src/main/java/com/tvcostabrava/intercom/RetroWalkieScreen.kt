@@ -86,8 +86,8 @@ fun RetroWalkieScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SpeakerLcdModule()
                     BrandModelRow()
@@ -96,12 +96,12 @@ fun RetroWalkieScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     LedPillRow(talking = talking)
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     TalkButton(
                         talking = talking,
                         enabledForPress = !handsFree,
@@ -113,14 +113,14 @@ fun RetroWalkieScreen(
                     Text(
                         text = "PRESS TO TALK",
                         color = RetroColors.OutlineVariant,
-                        fontSize = 11.sp,
+                        fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
-                        modifier = Modifier.padding(top = 10.dp),
+                        modifier = Modifier.padding(top = 6.dp),
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     HandsFreeButton(
                         active = handsFree,
                         onToggle = {
@@ -131,13 +131,13 @@ fun RetroWalkieScreen(
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
+                        modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
                     ) {
                         DecorLine()
                         Text(
                             text = "HANDS FREE MODE",
                             color = RetroColors.OnSurfaceVariant.copy(alpha = 0.4f),
-                            fontSize = 9.sp,
+                            fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace,
                             letterSpacing = 1.sp,
                             modifier = Modifier.padding(horizontal = 8.dp),
@@ -166,34 +166,34 @@ private fun ChassisHeader(onOpenSettings: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(44.dp)
             .background(RetroColors.SurfaceContainerHighest)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AntennaIcon(color = RetroColors.PrimaryLight, size = 18.dp)
-            Spacer(modifier = Modifier.width(8.dp))
+            AntennaIcon(color = RetroColors.PrimaryLight, size = 14.dp)
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "RADIO UNIT-82",
                 color = RetroColors.PrimaryLight,
-                fontSize = 16.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
+                letterSpacing = 0.5.sp,
                 maxLines = 1,
                 softWrap = false,
             )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BatteryIcon(color = RetroColors.PrimaryLight, size = 20.dp)
-            Spacer(modifier = Modifier.width(14.dp))
+            BatteryIcon(color = RetroColors.PrimaryLight, size = 16.dp)
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = "CFG",
                 color = RetroColors.Outline,
-                fontSize = 11.sp,
+                fontSize = 9.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp,
@@ -213,31 +213,31 @@ private fun SpeakerLcdModule() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(128.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .height(88.dp)
+            .clip(RoundedCornerShape(10.dp))
             .background(RetroColors.SpeakerGrille)
-            .border(4.dp, RetroColors.SurfaceContainerLowest, RoundedCornerShape(12.dp)),
+            .border(3.dp, RetroColors.SurfaceContainerLowest, RoundedCornerShape(10.dp)),
         contentAlignment = Alignment.Center,
     ) {
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.TopStart).padding(4.dp))
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp))
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp))
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp))
+        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.TopStart).padding(3.dp))
+        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.TopEnd).padding(3.dp))
+        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.BottomStart).padding(3.dp))
+        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.BottomEnd).padding(3.dp))
 
         Row(
             modifier = Modifier
-                .fillMaxWidth(0.78f)
-                .height(64.dp)
+                .fillMaxWidth(0.8f)
+                .height(48.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(RetroColors.LcdBackground)
                 .border(2.dp, RetroColors.SurfaceVariant, RoundedCornerShape(6.dp))
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Radio Alicante Libre",
                 color = RetroColors.PrimaryLight,
-                fontSize = 19.sp,
+                fontSize = 15.sp,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
                 modifier = Modifier
@@ -248,16 +248,16 @@ private fun SpeakerLcdModule() {
                 Text(
                     text = "SIGNAL",
                     color = RetroColors.PrimaryLight.copy(alpha = 0.5f),
-                    fontSize = 8.sp,
+                    fontSize = 7.sp,
                     fontFamily = FontFamily.Monospace,
                 )
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     repeat(5) { i ->
                         Box(
                             modifier = Modifier
-                                .width(4.dp)
-                                .height(12.dp)
+                                .width(3.dp)
+                                .height(9.dp)
                                 .background(
                                     if (i < 3) RetroColors.PrimaryLight.copy(alpha = 1f - i * 0.15f)
                                     else RetroColors.SurfaceContainer.copy(alpha = 0.5f),
@@ -275,14 +275,14 @@ private fun BrandModelRow() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 6.dp),
+            .padding(bottom = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Bottom,
     ) {
         Text(
             text = "SIGNAL-84",
             color = RetroColors.OnSurfaceVariant,
-            fontSize = 20.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
             letterSpacing = (-0.5).sp,
@@ -290,9 +290,9 @@ private fun BrandModelRow() {
         Text(
             text = "HIGH FIDELITY TRANSCEIVER",
             color = RetroColors.Outline,
-            fontSize = 9.sp,
+            fontSize = 7.sp,
             fontFamily = FontFamily.Monospace,
-            letterSpacing = 1.5.sp,
+            letterSpacing = 1.sp,
         )
     }
     Box(
@@ -319,27 +319,27 @@ private fun LedPillRow(talking: Boolean) {
         border = androidx.compose.foundation.BorderStroke(1.dp, RetroColors.OutlineVariant.copy(alpha = 0.2f)),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(22.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(9.dp)
                         .background(RetroColors.TxRed.copy(alpha = if (talking) 1f else blink), CircleShape),
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("TX", color = RetroColors.OnSurfaceVariant, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("TX", color = RetroColors.OnSurfaceVariant, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(9.dp)
                         .background(RetroColors.RxGreen.copy(alpha = 0.5f), CircleShape),
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("RX", color = RetroColors.OnSurfaceVariant, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("RX", color = RetroColors.OnSurfaceVariant, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             }
         }
     }
@@ -355,8 +355,8 @@ private fun TalkButton(talking: Boolean, enabledForPress: Boolean, onPress: (Boo
 
     Box(
         modifier = Modifier
-            .offset(y = if (talking) 6.dp else 0.dp)
-            .size(190.dp)
+            .offset(y = if (talking) 4.dp else 0.dp)
+            .size(128.dp)
             .clip(CircleShape)
             .background(gradient)
             .pointerInput(enabledForPress) {
@@ -376,12 +376,12 @@ private fun TalkButton(talking: Boolean, enabledForPress: Boolean, onPress: (Boo
             Text(
                 text = "HABLAR",
                 color = Color.White,
-                fontSize = 26.sp,
+                fontSize = 17.sp,
                 fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp,
+                letterSpacing = 1.sp,
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            MicIcon(color = Color.White.copy(alpha = if (talking) 1f else 0.5f), size = 32.dp)
+            Spacer(modifier = Modifier.height(4.dp))
+            MicIcon(color = Color.White.copy(alpha = if (talking) 1f else 0.5f), size = 20.dp)
         }
     }
 }
@@ -390,9 +390,9 @@ private fun TalkButton(talking: Boolean, enabledForPress: Boolean, onPress: (Boo
 private fun HandsFreeButton(active: Boolean, onToggle: () -> Unit) {
     Box(
         modifier = Modifier
-            .widthIn(max = 280.dp)
+            .widthIn(max = 260.dp)
             .fillMaxWidth()
-            .height(64.dp)
+            .height(46.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Brush.linearGradient(listOf(RetroColors.HandsFreeStart, RetroColors.HandsFreeEnd)))
             .then(
@@ -408,20 +408,20 @@ private fun HandsFreeButton(active: Boolean, onToggle: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            HeadsetIcon(color = RetroColors.OnHandsFree, size = 20.dp)
-            Spacer(modifier = Modifier.width(10.dp))
+            HeadsetIcon(color = RetroColors.OnHandsFree, size = 15.dp)
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "MANOS LIBRES",
                 color = RetroColors.OnHandsFree,
-                fontSize = 16.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp,
+                letterSpacing = 0.3.sp,
             )
             if (active) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .size(6.dp)
                         .background(RetroColors.RxGreen, CircleShape),
                 )
             }
@@ -447,14 +447,14 @@ private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(4.dp)
+                .height(3.dp)
                 .background(RetroColors.SurfaceVariant),
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(RetroColors.SurfaceContainerHigh)
-                .padding(horizontal = 6.dp, vertical = 10.dp),
+                .padding(horizontal = 4.dp, vertical = 6.dp),
         ) {
             items.forEachIndexed { i, label ->
                 val active = i == selected
@@ -463,26 +463,26 @@ private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .then(if (active) Modifier.background(RetroColors.PrimaryContainer) else Modifier)
-                        .padding(horizontal = 6.dp, vertical = 6.dp)
+                        .padding(horizontal = 4.dp, vertical = 4.dp)
                         .pointerInput(i) {
                             detectTapGestures(onTap = { onSelect(i) })
                         },
                 ) {
                     when (label) {
-                        "TRANSCEIVER" -> RadioIcon(color = tint, size = 18.dp)
-                        "CHANNELS" -> ChannelsIcon(color = tint, size = 18.dp)
-                        "SQUELCH" -> TuneIcon(color = tint, size = 18.dp)
-                        else -> HistoryIcon(color = tint, size = 18.dp)
+                        "TRANSCEIVER" -> RadioIcon(color = tint, size = 15.dp)
+                        "CHANNELS" -> ChannelsIcon(color = tint, size = 15.dp)
+                        "SQUELCH" -> TuneIcon(color = tint, size = 15.dp)
+                        else -> HistoryIcon(color = tint, size = 15.dp)
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = label,
                         color = tint.copy(alpha = if (active) 1f else 0.8f),
-                        fontSize = 7.5.sp,
+                        fontSize = 7.sp,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = 0.3.sp,
+                        letterSpacing = 0.2.sp,
                         maxLines = 1,
                         softWrap = false,
                     )

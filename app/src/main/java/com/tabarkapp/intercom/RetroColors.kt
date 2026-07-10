@@ -33,4 +33,8 @@ object RetroColors {
 
     // Pantalla LCD
     val LcdBackground = Color(0xFF2D3528)
+
+    // Boton de Rol en "solo" (pulsacion larga: unico canal activo)
+    val SoloBlue = Color(0xFF2563EB)
+    val OnSoloBlue = Color(0xFFEFF6FF)
 }

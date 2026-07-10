@@ -12,13 +12,17 @@ import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +31,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,24 +83,35 @@ class MainActivity : ComponentActivity() {
             var showSettings by remember {
                 mutableStateOf(SettingsStore.getServerUrl(this@MainActivity).isBlank())
             }
+            var isDark by remember {
+                mutableStateOf(SettingsStore.isDarkTheme(this@MainActivity))
+            }
+            val palette = if (isDark) DarkRetroPalette else LightRetroPalette
 
-            MaterialTheme {
-                Surface(color = RetroColors.Background) {
-                    if (showSettings) {
-                        SettingsScreen(
-                            initialUrl = SettingsStore.getServerUrl(this@MainActivity),
-                            onSave = { url ->
-                                SettingsStore.setServerUrl(this@MainActivity, url)
-                                service?.updateServerUrl(url)
-                                showSettings = false
-                            },
-                        )
-                    } else {
-                        RetroWalkieScreen(
-                            onTalkPressed = { pressed -> service?.setPttPressed(pressed) },
-                            onHandsFreeToggled = { enabled -> service?.setHandsFree(enabled) },
-                            onOpenSettings = { showSettings = true },
-                        )
+            CompositionLocalProvider(LocalRetroPalette provides palette) {
+                MaterialTheme {
+                    Surface(color = palette.background) {
+                        if (showSettings) {
+                            SettingsScreen(
+                                initialUrl = SettingsStore.getServerUrl(this@MainActivity),
+                                isDark = isDark,
+                                onThemeChange = { dark ->
+                                    isDark = dark
+                                    SettingsStore.setDarkTheme(this@MainActivity, dark)
+                                },
+                                onSave = { url ->
+                                    SettingsStore.setServerUrl(this@MainActivity, url)
+                                    service?.updateServerUrl(url)
+                                    showSettings = false
+                                },
+                            )
+                        } else {
+                            RetroWalkieScreen(
+                                onTalkPressed = { pressed -> service?.setPttPressed(pressed) },
+                                onHandsFreeToggled = { enabled -> service?.setHandsFree(enabled) },
+                                onOpenSettings = { showSettings = true },
+                            )
+                        }
                     }
                 }
             }
@@ -122,8 +138,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
+fun SettingsScreen(
+    initialUrl: String,
+    isDark: Boolean,
+    onThemeChange: (Boolean) -> Unit,
+    onSave: (String) -> Unit,
+) {
     var url by remember { mutableStateOf(initialUrl) }
+    val pal = LocalRetroPalette.current
 
     Column(
         modifier = Modifier
@@ -133,15 +155,30 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
+            text = "ESTILO VISUAL",
+            color = pal.onSurface,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.sp,
+        )
+        Row(
+            modifier = Modifier.padding(top = 10.dp, bottom = 28.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            ThemeOptionButton(label = "OSCURO", selected = isDark, onClick = { onThemeChange(true) })
+            ThemeOptionButton(label = "CLARO", selected = !isDark, onClick = { onThemeChange(false) })
+        }
+
+        Text(
             text = "SERVIDOR DE SEÑALIZACIÓN",
-            color = RetroColors.OnSurface,
+            color = pal.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.5.sp,
         )
         Text(
             text = "Pega aquí la URL wss:// de tu servidor (Render u otro)",
-            color = RetroColors.OnSurfaceVariant,
+            color = pal.onSurfaceVariant,
             fontSize = 13.sp,
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
@@ -155,7 +192,7 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
             placeholder = {
                 Text(
                     "wss://tu-servidor.onrender.com",
-                    color = RetroColors.OnSurfaceVariant,
+                    color = pal.onSurfaceVariant,
                     fontFamily = FontFamily.Monospace,
                 )
             },
@@ -164,11 +201,11 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
                 autoCorrect = false,
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = RetroColors.OnSurface,
-                unfocusedTextColor = RetroColors.OnSurface,
+                focusedTextColor = pal.onSurface,
+                unfocusedTextColor = pal.onSurface,
                 cursorColor = RetroColors.PrimaryContainer,
                 focusedBorderColor = RetroColors.PrimaryContainer,
-                unfocusedBorderColor = RetroColors.Outline,
+                unfocusedBorderColor = pal.outline,
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -187,6 +224,30 @@ fun SettingsScreen(initialUrl: String, onSave: (String) -> Unit) {
                 .height(52.dp),
         ) {
             Text("GUARDAR", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        }
+    }
+}
+
+@Composable
+private fun ThemeOptionButton(label: String, selected: Boolean, onClick: () -> Unit) {
+    val pal = LocalRetroPalette.current
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) RetroColors.PrimaryContainer else pal.surfaceContainerHigh,
+        modifier = Modifier
+            .height(44.dp)
+            .width(110.dp)
+            .clickable(onClick = onClick),
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = label,
+                color = if (selected) RetroColors.OnPrimaryContainer else pal.onSurfaceVariant,
+                fontSize = 12.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+            )
         }
     }
 }

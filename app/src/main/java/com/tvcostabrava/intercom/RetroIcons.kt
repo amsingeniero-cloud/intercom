@@ -37,6 +37,32 @@ fun ScrewIcon(color: Color = Color.White, size: Dp = 14.dp, modifier: Modifier =
     }
 }
 
+/** Icono de engranaje para la pestana SETTINGS. */
+@Composable
+fun GearIcon(color: Color, size: Dp = 20.dp, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val cx = w * 0.5f
+        val cy = h * 0.5f
+        val outerR = w * 0.42f
+        val innerR = w * 0.18f
+        val stroke = Stroke(width = w * 0.1f)
+
+        repeat(6) { i ->
+            val angle = Math.toRadians((i * 60).toDouble())
+            val toothLen = w * 0.14f
+            val x1 = cx + (outerR * kotlin.math.cos(angle)).toFloat()
+            val y1 = cy + (outerR * kotlin.math.sin(angle)).toFloat()
+            val x2 = cx + ((outerR + toothLen) * kotlin.math.cos(angle)).toFloat()
+            val y2 = cy + ((outerR + toothLen) * kotlin.math.sin(angle)).toFloat()
+            drawLine(color, Offset(x1, y1), Offset(x2, y2), strokeWidth = stroke.width)
+        }
+        drawCircle(color, radius = outerR, center = Offset(cx, cy), style = stroke)
+        drawCircle(color, radius = innerR, center = Offset(cx, cy))
+    }
+}
+
 /**
  * Iconos dibujados a mano con Canvas (sin depender de material-icons-extended)
  * para el look "radio industrial 80s" del diseño Stitch.

@@ -6,6 +6,9 @@ import android.content.Context
 object SettingsStore {
     private const val PREFS_NAME = "intercom_settings"
     private const val KEY_SERVER_URL = "server_url"
+    private const val KEY_THEME = "theme"
+    private const val THEME_LIGHT = "light"
+    private const val THEME_DARK = "dark"
 
     fun getServerUrl(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -16,6 +19,19 @@ object SettingsStore {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_SERVER_URL, url)
+            .apply()
+    }
+
+    /** true = Oscuro (por defecto), false = Claro. */
+    fun isDarkTheme(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_THEME, THEME_DARK) != THEME_LIGHT
+    }
+
+    fun setDarkTheme(context: Context, dark: Boolean) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_THEME, if (dark) THEME_DARK else THEME_LIGHT)
             .apply()
     }
 }

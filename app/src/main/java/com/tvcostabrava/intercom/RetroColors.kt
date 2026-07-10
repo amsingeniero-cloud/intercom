@@ -3,31 +3,12 @@ package com.tvcostabrava.intercom
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta "Signal-84" calcada del HTML/CSS real del mockup de Stitch
- * (Radio Unit-82 / Walkie-Talkie Radio Alicante Libre).
+ * Colores de marca / semanticos: NO cambian entre tema Claro y Oscuro
+ * (un LCD siempre es verde, un LED siempre es rojo/verde, etc).
+ * Los colores de "chasis" (neutros, texto) que si cambian con el tema
+ * viven en RetroPalette / LocalRetroPalette.
  */
 object RetroColors {
-    // Fondo de pagina detras del chasis (body { bg-background })
-    val Background = Color(0xFF131313)
-
-    // Fondos del chasis
-    val SurfaceContainerLowest = Color(0xFF0E0E0E)
-    val SurfaceContainerLow = Color(0xFF1C1B1B)
-    val SurfaceContainer = Color(0xFF20201F)
-    val SurfaceContainerHigh = Color(0xFF2A2A2A)
-    val SurfaceContainerHighest = Color(0xFF353535)
-    val SurfaceVariant = Color(0xFF353535)
-    val SpeakerGrille = Color(0xFF1A1A1A)
-
-    // Texto / iconos
-    val OnSurface = Color(0xFFE5E2E1)
-    val OnSurfaceVariant = Color(0xFFE4BEB1)
-    val Outline = Color(0xFFAB897D)
-    val OutlineVariant = Color(0xFF5B4137)
-
-    // "primary" (salmon claro): titulo cabecera, iconos antena/bateria, texto LCD
-    val PrimaryLight = Color(0xFFFFB59A)
-
     // "primary-container" (naranja vivo): solo la pestaña activa de la barra inferior
     val PrimaryContainer = Color(0xFFFF5C00)
     val OnPrimaryContainer = Color(0xFF521800)

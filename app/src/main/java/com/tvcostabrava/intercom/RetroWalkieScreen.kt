@@ -61,27 +61,28 @@ fun RetroWalkieScreen(
     var isTalking by remember { mutableStateOf(false) }
     var handsFree by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
+    val pal = LocalRetroPalette.current
 
     val talking = isTalking || handsFree
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(RetroColors.SurfaceContainerHighest)
+            .background(pal.surfaceContainerHighest)
             .padding(12.dp)
             .clip(RoundedCornerShape(32.dp)),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(RetroColors.SurfaceContainerHigh),
+                .background(pal.surfaceContainerHigh),
         ) {
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState()),
             ) {
-                ChassisHeader(onOpenSettings = onOpenSettings)
+                ChassisHeader()
 
                 Column(
                     modifier = Modifier
@@ -112,7 +113,7 @@ fun RetroWalkieScreen(
                     )
                     Text(
                         text = "PRESS TO TALK",
-                        color = RetroColors.OutlineVariant,
+                        color = pal.outlineVariant,
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
@@ -136,7 +137,7 @@ fun RetroWalkieScreen(
                         DecorLine()
                         Text(
                             text = "HANDS FREE MODE",
-                            color = RetroColors.OnSurfaceVariant.copy(alpha = 0.4f),
+                            color = pal.onSurfaceVariant.copy(alpha = 0.4f),
                             fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace,
                             letterSpacing = 1.sp,
@@ -147,82 +148,73 @@ fun RetroWalkieScreen(
                 }
             }
 
-            BottomNavBar(selected = selectedTab, onSelect = { selectedTab = it })
+            BottomNavBar(
+                selected = selectedTab,
+                onSelect = { i ->
+                    if (i == SETTINGS_TAB_INDEX) onOpenSettings() else selectedTab = i
+                },
+            )
         }
 
         ScrewIcon(
-            color = RetroColors.OnSurface,
+            color = pal.onSurface,
             modifier = Modifier.align(Alignment.TopStart).padding(20.dp, 84.dp, 0.dp, 0.dp),
         )
         ScrewIcon(
-            color = RetroColors.OnSurface,
+            color = pal.onSurface,
             modifier = Modifier.align(Alignment.TopEnd).padding(0.dp, 84.dp, 20.dp, 0.dp),
         )
     }
 }
 
+private const val SETTINGS_TAB_INDEX = 2
+
 @Composable
-private fun ChassisHeader(onOpenSettings: () -> Unit) {
+private fun ChassisHeader() {
+    val pal = LocalRetroPalette.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(44.dp)
-            .background(RetroColors.SurfaceContainerHighest)
+            .background(pal.surfaceContainerHighest)
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            AntennaIcon(color = RetroColors.PrimaryLight, size = 14.dp)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "RADIO UNIT-82",
-                color = RetroColors.PrimaryLight,
-                fontSize = 13.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp,
-                maxLines = 1,
-                softWrap = false,
-            )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            BatteryIcon(color = RetroColors.PrimaryLight, size = 16.dp)
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = "CFG",
-                color = RetroColors.Outline,
-                fontSize = 9.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                maxLines = 1,
-                softWrap = false,
-                modifier = Modifier.pointerInput(Unit) {
-                    detectTapGestures(onTap = { onOpenSettings() })
-                },
-            )
-        }
+        AntennaIcon(color = pal.primaryLight, size = 14.dp)
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "RADIO UNIT-82",
+            color = pal.primaryLight,
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp,
+            maxLines = 1,
+            softWrap = false,
+            modifier = Modifier.weight(1f),
+        )
+        BatteryIcon(color = pal.primaryLight, size = 16.dp)
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SpeakerLcdModule() {
+    val pal = LocalRetroPalette.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(88.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(RetroColors.SpeakerGrille)
-            .border(3.dp, RetroColors.SurfaceContainerLowest, RoundedCornerShape(10.dp)),
+            .background(pal.speakerGrille)
+            .border(3.dp, pal.surfaceContainerLowest, RoundedCornerShape(10.dp)),
         contentAlignment = Alignment.Center,
     ) {
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.TopStart).padding(3.dp))
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.TopEnd).padding(3.dp))
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.BottomStart).padding(3.dp))
-        CornerDot(color = RetroColors.OnSurface, modifier = Modifier.align(Alignment.BottomEnd).padding(3.dp))
+        CornerDot(color = pal.onSurface, modifier = Modifier.align(Alignment.TopStart).padding(3.dp))
+        CornerDot(color = pal.onSurface, modifier = Modifier.align(Alignment.TopEnd).padding(3.dp))
+        CornerDot(color = pal.onSurface, modifier = Modifier.align(Alignment.BottomStart).padding(3.dp))
+        CornerDot(color = pal.onSurface, modifier = Modifier.align(Alignment.BottomEnd).padding(3.dp))
 
         Row(
             modifier = Modifier
@@ -230,13 +222,13 @@ private fun SpeakerLcdModule() {
                 .height(48.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(RetroColors.LcdBackground)
-                .border(2.dp, RetroColors.SurfaceVariant, RoundedCornerShape(6.dp))
+                .border(2.dp, pal.surfaceVariant, RoundedCornerShape(6.dp))
                 .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Radio Alicante Libre",
-                color = RetroColors.PrimaryLight,
+                color = pal.primaryLight,
                 fontSize = 15.sp,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
@@ -247,7 +239,7 @@ private fun SpeakerLcdModule() {
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "SIGNAL",
-                    color = RetroColors.PrimaryLight.copy(alpha = 0.5f),
+                    color = pal.primaryLight.copy(alpha = 0.5f),
                     fontSize = 7.sp,
                     fontFamily = FontFamily.Monospace,
                 )
@@ -259,8 +251,8 @@ private fun SpeakerLcdModule() {
                                 .width(3.dp)
                                 .height(9.dp)
                                 .background(
-                                    if (i < 3) RetroColors.PrimaryLight.copy(alpha = 1f - i * 0.15f)
-                                    else RetroColors.SurfaceContainer.copy(alpha = 0.5f),
+                                    if (i < 3) pal.primaryLight.copy(alpha = 1f - i * 0.15f)
+                                    else pal.surfaceContainer.copy(alpha = 0.5f),
                                 ),
                         )
                     }
@@ -272,6 +264,7 @@ private fun SpeakerLcdModule() {
 
 @Composable
 private fun BrandModelRow() {
+    val pal = LocalRetroPalette.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -281,7 +274,7 @@ private fun BrandModelRow() {
     ) {
         Text(
             text = "SIGNAL-84",
-            color = RetroColors.OnSurfaceVariant,
+            color = pal.onSurfaceVariant,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
@@ -289,7 +282,7 @@ private fun BrandModelRow() {
         )
         Text(
             text = "HIGH FIDELITY TRANSCEIVER",
-            color = RetroColors.Outline,
+            color = pal.outline,
             fontSize = 7.sp,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 1.sp,
@@ -299,12 +292,13 @@ private fun BrandModelRow() {
         modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(RetroColors.OutlineVariant),
+            .background(pal.outlineVariant),
     )
 }
 
 @Composable
 private fun LedPillRow(talking: Boolean) {
+    val pal = LocalRetroPalette.current
     val infinite = rememberInfiniteTransition(label = "tx-blink")
     val blink by infinite.animateFloat(
         initialValue = 1f,
@@ -315,8 +309,8 @@ private fun LedPillRow(talking: Boolean) {
 
     Surface(
         shape = RoundedCornerShape(50),
-        color = RetroColors.SurfaceContainerLowest.copy(alpha = 0.5f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, RetroColors.OutlineVariant.copy(alpha = 0.2f)),
+        color = pal.surfaceContainerLowest.copy(alpha = 0.5f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, pal.outlineVariant.copy(alpha = 0.2f)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 5.dp),
@@ -330,7 +324,7 @@ private fun LedPillRow(talking: Boolean) {
                         .background(RetroColors.TxRed.copy(alpha = if (talking) 1f else blink), CircleShape),
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                Text("TX", color = RetroColors.OnSurfaceVariant, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                Text("TX", color = pal.onSurfaceVariant, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -339,7 +333,7 @@ private fun LedPillRow(talking: Boolean) {
                         .background(RetroColors.RxGreen.copy(alpha = 0.5f), CircleShape),
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                Text("RX", color = RetroColors.OnSurfaceVariant, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                Text("RX", color = pal.onSurfaceVariant, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             }
         }
     }
@@ -431,34 +425,36 @@ private fun HandsFreeButton(active: Boolean, onToggle: () -> Unit) {
 
 @Composable
 private fun DecorLine() {
+    val pal = LocalRetroPalette.current
     Box(
         modifier = Modifier
             .width(32.dp)
             .height(1.dp)
-            .background(RetroColors.SurfaceContainerLowest.copy(alpha = 0.4f)),
+            .background(pal.surfaceContainerLowest.copy(alpha = 0.4f)),
     )
 }
 
 @Composable
 private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
-    val items = listOf("TRANSCEIVER", "CHANNELS", "SQUELCH", "LOG")
+    val pal = LocalRetroPalette.current
+    val items = listOf("TRANSCEIVER", "CHANNELS", "SETTINGS", "LOG")
 
     Column {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(3.dp)
-                .background(RetroColors.SurfaceVariant),
+                .background(pal.surfaceVariant),
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(RetroColors.SurfaceContainerHigh)
+                .background(pal.surfaceContainerHigh)
                 .padding(horizontal = 4.dp, vertical = 6.dp),
         ) {
             items.forEachIndexed { i, label ->
                 val active = i == selected
-                val tint = if (active) RetroColors.OnPrimaryContainer else RetroColors.OnSurfaceVariant
+                val tint = if (active) RetroColors.OnPrimaryContainer else pal.onSurfaceVariant
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
@@ -473,7 +469,7 @@ private fun BottomNavBar(selected: Int, onSelect: (Int) -> Unit) {
                     when (label) {
                         "TRANSCEIVER" -> RadioIcon(color = tint, size = 15.dp)
                         "CHANNELS" -> ChannelsIcon(color = tint, size = 15.dp)
-                        "SQUELCH" -> TuneIcon(color = tint, size = 15.dp)
+                        "SETTINGS" -> GearIcon(color = tint, size = 15.dp)
                         else -> HistoryIcon(color = tint, size = 15.dp)
                     }
                     Spacer(modifier = Modifier.height(2.dp))

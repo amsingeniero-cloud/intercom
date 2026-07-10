@@ -111,6 +111,7 @@ class MainActivity : ComponentActivity() {
                                 onTalkPressed = { pressed -> service?.setPttPressed(pressed) },
                                 onHandsFreeToggled = { enabled -> service?.setHandsFree(enabled) },
                                 onOpenSettings = { showSettings = true },
+                                onChannelsChanged = { channels -> service?.setActiveChannels(channels) },
                             )
                         }
                     }

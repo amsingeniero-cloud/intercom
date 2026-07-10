@@ -40,6 +40,8 @@ const wss = new WebSocket.Server({ server });
 
 // peerId -> ws
 const peers = new Map();
+// peerId -> string[] (canales activos de ese peer; nunca toca audio, solo texto)
+const peerChannels = new Map();
 
 function send(ws, obj) {
   if (ws.readyState === WebSocket.OPEN) {
@@ -61,12 +63,23 @@ wss.on('connection', (ws) => {
     if (msg.type === 'join' && msg.id) {
       id = msg.id;
       peers.set(id, ws);
+      peerChannels.set(id, []);
 
-      const existing = [...peers.keys()].filter((peerId) => peerId !== id);
+      const existing = [...peers.keys()]
+        .filter((peerId) => peerId !== id)
+        .map((peerId) => ({ id: peerId, channels: peerChannels.get(peerId) || [] }));
       send(ws, { type: 'existing-peers', peers: existing });
 
       for (const [peerId, peerWs] of peers) {
         if (peerId !== id) send(peerWs, { type: 'peer-joined', id });
+      }
+      return;
+    }
+
+    if (msg.type === 'channels' && id && Array.isArray(msg.channels)) {
+      peerChannels.set(id, msg.channels);
+      for (const [peerId, peerWs] of peers) {
+        if (peerId !== id) send(peerWs, { type: 'peer-channels', id, channels: msg.channels });
       }
       return;
     }
@@ -81,6 +94,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     if (id) {
       peers.delete(id);
+      peerChannels.delete(id);
       for (const [, peerWs] of peers) send(peerWs, { type: 'peer-left', id });
     }
   });

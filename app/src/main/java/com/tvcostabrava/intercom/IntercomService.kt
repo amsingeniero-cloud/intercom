@@ -42,6 +42,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     private var pttPressed = false
     private var handsFreeOn = false
     private val connectedPeers = mutableSetOf<String>()
+    private var activeChannels: MutableSet<String> = mutableSetOf()
 
     private val _state = MutableStateFlow(IntercomState())
     val state: StateFlow<IntercomState> = _state
@@ -119,6 +120,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         publishState()
 
         webRTCClient = WebRTCClient(applicationContext, this)
+        webRTCClient.updateMyChannels(activeChannels)
         applyMicState()
 
         signalingClient = SignalingClient(url, myId, this)
@@ -155,6 +157,14 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         webRTCClient.setMicEnabled(enabled)
     }
 
+    /** Llamado desde la UI cada vez que cambia el conjunto de interruptores encendidos. */
+    fun setActiveChannels(channels: Set<String>) {
+        activeChannels = channels.toMutableSet()
+        Log.i(TAG, "setActiveChannels -> $activeChannels")
+        webRTCClient.updateMyChannels(activeChannels)
+        signalingClient.sendChannels(activeChannels.toList())
+    }
+
     // ---- WebRTCClient.SignalingCallback ----
 
     override fun sendSignal(toPeerId: String, data: JSONObject) {
@@ -163,11 +173,12 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
 
     // ---- SignalingClient.Listener ----
 
-    override fun onExistingPeers(peerIds: List<String>) {
-        Log.i(TAG, "onExistingPeers: $peerIds (myId=$myId)")
-        peerIds.forEach {
-            connectedPeers.add(it)
-            webRTCClient.connectToPeer(it, isInitiator = true)
+    override fun onExistingPeers(peers: List<PeerInfo>) {
+        Log.i(TAG, "onExistingPeers: $peers (myId=$myId)")
+        peers.forEach { peer ->
+            connectedPeers.add(peer.id)
+            webRTCClient.updatePeerChannels(peer.id, peer.channels.toSet())
+            webRTCClient.connectToPeer(peer.id, isInitiator = true)
         }
         publishState()
     }
@@ -186,6 +197,10 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         publishState()
     }
 
+    override fun onPeerChannels(peerId: String, channels: List<String>) {
+        webRTCClient.updatePeerChannels(peerId, channels.toSet())
+    }
+
     override fun onSignal(fromPeerId: String, data: JSONObject) {
         webRTCClient.onRemoteSignal(fromPeerId, data)
     }
@@ -193,6 +208,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     override fun onConnected() {
         Log.i(TAG, "onConnected (myId=$myId)")
         _state.value = _state.value.copy(connectedToServer = true)
+        if (activeChannels.isNotEmpty()) signalingClient.sendChannels(activeChannels.toList())
     }
 
     override fun onDisconnected() {

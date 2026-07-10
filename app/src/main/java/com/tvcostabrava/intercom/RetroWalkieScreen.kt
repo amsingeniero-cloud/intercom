@@ -47,6 +47,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+private data class ChannelDef(val id: String, val label: String)
+
+private val DEPARTMENT_CHANNELS = listOf(
+    ChannelDef("realizacion", "REALIZACIÓN"),
+    ChannelDef("camaras", "CÁMARAS"),
+    ChannelDef("produccion", "PRODUCCIÓN"),
+    ChannelDef("tecnica", "TÉCNICA"),
+    ChannelDef("periodistas", "PERIODISTAS"),
+)
+private const val TODOS_ID = "__todos__"
+
 /**
  * Calco del mockup Stitch "RADIO UNIT-82 | SIGNAL-84" (Walkie-Talkie Radio Alicante Libre).
  * Solo HABLAR y MANOS LIBRES son funcionales; LCD, LEDs TX/RX, corner-screws y barra
@@ -57,13 +68,24 @@ fun RetroWalkieScreen(
     onTalkPressed: (Boolean) -> Unit,
     onHandsFreeToggled: (Boolean) -> Unit,
     onOpenSettings: () -> Unit,
+    onChannelsChanged: (Set<String>) -> Unit,
 ) {
     var isTalking by remember { mutableStateOf(false) }
     var handsFree by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
+    var activeChannels by remember { mutableStateOf(setOf<String>()) }
     val pal = LocalRetroPalette.current
 
     val talking = isTalking || handsFree
+
+    fun toggleChannel(channelId: String) {
+        val allDeptIds = DEPARTMENT_CHANNELS.map { it.id }.toSet()
+        activeChannels = when (channelId) {
+            TODOS_ID -> if (activeChannels.containsAll(allDeptIds)) emptySet() else allDeptIds
+            else -> if (channelId in activeChannels) activeChannels - channelId else activeChannels + channelId
+        }
+        onChannelsChanged(activeChannels)
+    }
 
     Box(
         modifier = Modifier
@@ -92,6 +114,10 @@ fun RetroWalkieScreen(
                 ) {
                     SpeakerLcdModule()
                     BrandModelRow()
+                    ChannelSwitchGrid(
+                        activeChannels = activeChannels,
+                        onToggle = ::toggleChannel,
+                    )
                 }
 
                 Column(
@@ -294,6 +320,113 @@ private fun BrandModelRow() {
             .height(1.dp)
             .background(pal.outlineVariant),
     )
+}
+
+@Composable
+private fun ChannelSwitchGrid(activeChannels: Set<String>, onToggle: (String) -> Unit) {
+    val allDeptActive = activeChannels.containsAll(DEPARTMENT_CHANNELS.map { it.id })
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            DEPARTMENT_CHANNELS.take(3).forEach { channel ->
+                ChannelSwitch(
+                    label = channel.label,
+                    active = channel.id in activeChannels,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onToggle(channel.id) },
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            DEPARTMENT_CHANNELS.drop(3).forEach { channel ->
+                ChannelSwitch(
+                    label = channel.label,
+                    active = channel.id in activeChannels,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onToggle(channel.id) },
+                )
+            }
+            ChannelSwitch(
+                label = "TODOS",
+                active = allDeptActive,
+                modifier = Modifier.weight(1f),
+                onClick = { onToggle(TODOS_ID) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val pal = LocalRetroPalette.current
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(
+                    if (active) {
+                        Brush.linearGradient(listOf(RetroColors.TalkIdleStart, RetroColors.PrimaryContainer))
+                    } else {
+                        Brush.linearGradient(listOf(pal.surfaceContainerHigh, pal.surfaceContainerHigh))
+                    },
+                )
+                .border(
+                    1.dp,
+                    if (active) RetroColors.PrimaryContainer else pal.outlineVariant,
+                    RoundedCornerShape(6.dp),
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { onClick() })
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 4.dp)
+                    .size(6.dp)
+                    .background(
+                        if (active) RetroColors.TxRed else pal.surfaceContainerLowest,
+                        CircleShape,
+                    )
+                    .then(
+                        if (active) {
+                            Modifier.border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape)
+                        } else {
+                            Modifier
+                        },
+                    ),
+            )
+        }
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(
+            text = label,
+            color = if (active) RetroColors.PrimaryContainer else pal.onSurfaceVariant,
+            fontSize = 7.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.2.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 2,
+        )
+    }
 }
 
 @Composable

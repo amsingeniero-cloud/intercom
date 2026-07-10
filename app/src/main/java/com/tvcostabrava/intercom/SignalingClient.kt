@@ -12,9 +12,12 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
+/** Un peer visto en la sala y los canales que tiene activos ahora mismo. */
+data class PeerInfo(val id: String, val channels: List<String>)
+
 /**
  * Habla el protocolo minimo del server de senializacion (server/index.js):
- * join / existing-peers / peer-joined / signal / peer-left.
+ * join / existing-peers / peer-joined / channels / peer-channels / signal / peer-left.
  * El server nunca ve audio, solo reenvia estos mensajes JSON.
  *
  * Se reconecta solo con backoff si la conexion se cae de forma inesperada
@@ -27,9 +30,10 @@ class SignalingClient(
     private val listener: Listener,
 ) {
     interface Listener {
-        fun onExistingPeers(peerIds: List<String>)
+        fun onExistingPeers(peers: List<PeerInfo>)
         fun onPeerJoined(peerId: String)
         fun onPeerLeft(peerId: String)
+        fun onPeerChannels(peerId: String, channels: List<String>)
         fun onSignal(fromPeerId: String, data: JSONObject)
         fun onConnected()
         fun onDisconnected()
@@ -101,15 +105,27 @@ class SignalingClient(
         when (msg.optString("type")) {
             "existing-peers" -> {
                 val arr: JSONArray = msg.optJSONArray("peers") ?: JSONArray()
-                val ids = (0 until arr.length()).map { arr.getString(it) }
-                Log.i(TAG, "existing-peers: $ids")
-                listener.onExistingPeers(ids)
+                val peers = (0 until arr.length()).map { i ->
+                    val obj = arr.getJSONObject(i)
+                    val channelsArr = obj.optJSONArray("channels") ?: JSONArray()
+                    PeerInfo(
+                        id = obj.getString("id"),
+                        channels = (0 until channelsArr.length()).map { channelsArr.getString(it) },
+                    )
+                }
+                Log.i(TAG, "existing-peers: $peers")
+                listener.onExistingPeers(peers)
             }
             "peer-joined" -> {
                 Log.i(TAG, "peer-joined: ${msg.getString("id")}")
                 listener.onPeerJoined(msg.getString("id"))
             }
             "peer-left" -> listener.onPeerLeft(msg.getString("id"))
+            "peer-channels" -> {
+                val channelsArr = msg.optJSONArray("channels") ?: JSONArray()
+                val channels = (0 until channelsArr.length()).map { channelsArr.getString(it) }
+                listener.onPeerChannels(msg.getString("id"), channels)
+            }
             "signal" -> listener.onSignal(msg.getString("from"), msg.getJSONObject("data"))
         }
     }
@@ -121,6 +137,13 @@ class SignalingClient(
             .put("data", data)
         val sent = socket?.send(msg.toString()) ?: false
         Log.d(TAG, "sendSignal to=$toPeerId kind=${data.optString("kind")} sent=$sent")
+    }
+
+    fun sendChannels(channels: List<String>) {
+        val msg = JSONObject()
+            .put("type", "channels")
+            .put("channels", JSONArray(channels))
+        socket?.send(msg.toString())
     }
 
     fun disconnect() {

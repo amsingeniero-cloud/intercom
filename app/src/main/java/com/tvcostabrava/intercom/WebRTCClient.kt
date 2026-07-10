@@ -31,6 +31,9 @@ class WebRTCClient(
     private val eglBase = EglBase.create()
 
     private val peerConnections = mutableMapOf<String, PeerConnection>()
+    private val senders = mutableMapOf<String, org.webrtc.RtpSender>()
+    private val peerChannels = mutableMapOf<String, Set<String>>()
+    private var myChannels: Set<String> = emptySet()
     private lateinit var localAudioTrack: AudioTrack
     private lateinit var audioSource: AudioSource
     private lateinit var peerConnectionFactory: PeerConnectionFactory
@@ -71,6 +74,29 @@ class WebRTCClient(
 
     fun setMicEnabled(enabled: Boolean) {
         localAudioTrack.setEnabled(enabled)
+    }
+
+    /** Mis canales activos ahora mismo (los interruptores que tengo encendidos). */
+    fun updateMyChannels(channels: Set<String>) {
+        myChannels = channels
+        peerConnections.keys.forEach { updateSenderGating(it) }
+    }
+
+    /** Canales activos que nos ha anunciado un peer concreto. */
+    fun updatePeerChannels(peerId: String, channels: Set<String>) {
+        peerChannels[peerId] = channels
+        updateSenderGating(peerId)
+    }
+
+    /**
+     * Solo le llega mi audio a un peer si compartimos al menos un canal activo.
+     * No usamos salas WebRTC separadas: es la MISMA conexion de siempre, solo se
+     * conecta/desconecta el track segun el solape de canales.
+     */
+    private fun updateSenderGating(peerId: String) {
+        val sender = senders[peerId] ?: return
+        val shareChannel = myChannels.intersect(peerChannels[peerId] ?: emptySet()).isNotEmpty()
+        sender.setTrack(if (shareChannel) localAudioTrack else null, false)
     }
 
     /** Llamar cuando llega existing-peers o peer-joined con un id nuevo. */
@@ -119,8 +145,10 @@ class WebRTCClient(
             return
         }
 
-        pc.addTrack(localAudioTrack, listOf("local_stream"))
+        val sender = pc.addTrack(localAudioTrack, listOf("local_stream"))
+        senders[peerId] = sender
         peerConnections[peerId] = pc
+        updateSenderGating(peerId)
 
         if (isInitiator) {
             pc.createOffer(object : SdpObserverAdapter("createOffer[$peerId]") {
@@ -181,11 +209,15 @@ class WebRTCClient(
 
     fun removePeer(peerId: String) {
         peerConnections.remove(peerId)?.close()
+        senders.remove(peerId)
+        peerChannels.remove(peerId)
     }
 
     fun dispose() {
         peerConnections.values.forEach { it.close() }
         peerConnections.clear()
+        senders.clear()
+        peerChannels.clear()
         audioSource.dispose()
         peerConnectionFactory.dispose()
         eglBase.release()

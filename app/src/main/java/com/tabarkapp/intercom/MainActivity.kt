@@ -14,7 +14,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -121,13 +119,6 @@ class MainActivity : ComponentActivity() {
                                     SettingsStore.setRole(this@MainActivity, newRole)
                                     service?.setActiveChannels(activeChannels)
                                 },
-                                activeChannels = activeChannels,
-                                onSoloChannel = { channelId ->
-                                    activeChannels = setOf(channelId)
-                                    role = channelId
-                                    SettingsStore.setRole(this@MainActivity, channelId)
-                                    service?.setActiveChannels(activeChannels)
-                                },
                                 onSave = { url ->
                                     SettingsStore.setServerUrl(this@MainActivity, url)
                                     service?.updateServerUrl(url)
@@ -179,8 +170,6 @@ fun SettingsScreen(
     onThemeChange: (Boolean) -> Unit,
     currentRole: String?,
     onRoleChange: (String) -> Unit,
-    activeChannels: Set<String>,
-    onSoloChannel: (String) -> Unit,
     onSave: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -203,7 +192,7 @@ fun SettingsScreen(
             letterSpacing = 1.sp,
         )
         Text(
-            text = "Tu departamento: es tu canal por defecto al abrir la app. Mantén pulsado para hablar solo con ese canal (solo)",
+            text = "Tu departamento: es tu canal por defecto al abrir la app",
             color = pal.onSurfaceVariant,
             fontSize = 12.sp,
             fontFamily = FontFamily.Monospace,
@@ -217,9 +206,7 @@ fun SettingsScreen(
                 RoleOptionButton(
                     label = channel.label,
                     selected = channel.id == currentRole,
-                    solo = activeChannels == setOf(channel.id),
                     onClick = { onRoleChange(channel.id) },
-                    onLongClick = { onSoloChannel(channel.id) },
                 )
             }
         }
@@ -315,40 +302,15 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun RoleOptionButton(
-    label: String,
-    selected: Boolean,
-    solo: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
+private fun RoleOptionButton(label: String, selected: Boolean, onClick: () -> Unit) {
     val pal = LocalRetroPalette.current
-    val currentOnClick by androidx.compose.runtime.rememberUpdatedState(onClick)
-    val currentOnLongClick by androidx.compose.runtime.rememberUpdatedState(onLongClick)
-
-    val containerColor = when {
-        solo -> RetroColors.SoloBlue
-        selected -> RetroColors.PrimaryContainer
-        else -> pal.surfaceContainerHigh
-    }
-    val contentColor = when {
-        solo -> RetroColors.OnSoloBlue
-        selected -> RetroColors.OnPrimaryContainer
-        else -> pal.onSurfaceVariant
-    }
-
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = containerColor,
+        color = if (selected) RetroColors.PrimaryContainer else pal.surfaceContainerHigh,
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { currentOnClick() },
-                    onLongPress = { currentOnLongClick() },
-                )
-            },
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier
@@ -360,13 +322,13 @@ private fun RoleOptionButton(
                 modifier = Modifier
                     .size(10.dp)
                     .background(
-                        contentColor,
+                        if (selected) RetroColors.OnPrimaryContainer else pal.outlineVariant,
                         androidx.compose.foundation.shape.CircleShape,
                     ),
             )
             Text(
-                text = if (solo) "$label · SOLO" else label,
-                color = contentColor,
+                text = label,
+                color = if (selected) RetroColors.OnPrimaryContainer else pal.onSurfaceVariant,
                 fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,

@@ -2,6 +2,7 @@ package com.tvcostabrava.intercom
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -51,14 +52,17 @@ class SignalingClient(
     }
 
     private fun attemptConnect() {
+        Log.i(TAG, "attemptConnect() -> $serverUrl (myId=$myId)")
         val request = try {
             Request.Builder().url(serverUrl).build()
         } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "URL invalida: $serverUrl", e)
             listener.onDisconnected()
             return
         }
         socket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.i(TAG, "onOpen: conectado al servidor de senializacion")
                 reconnectAttempt = 0
                 val join = JSONObject().put("type", "join").put("id", myId)
                 webSocket.send(join.toString())
@@ -70,11 +74,13 @@ class SignalingClient(
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                Log.w(TAG, "onClosed: code=$code reason=$reason")
                 listener.onDisconnected()
                 scheduleReconnect()
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.e(TAG, "onFailure: ${t.message} (http=${response?.code})", t)
                 listener.onDisconnected()
                 scheduleReconnect()
             }
@@ -85,18 +91,24 @@ class SignalingClient(
         if (manualDisconnect) return
         reconnectAttempt++
         val delayMs = (2000L * reconnectAttempt).coerceAtMost(15_000L)
+        Log.i(TAG, "scheduleReconnect en ${delayMs}ms (intento $reconnectAttempt)")
         mainHandler.postDelayed({ if (!manualDisconnect) attemptConnect() }, delayMs)
     }
 
     private fun handleMessage(text: String) {
+        Log.d(TAG, "handleMessage: $text")
         val msg = JSONObject(text)
         when (msg.optString("type")) {
             "existing-peers" -> {
                 val arr: JSONArray = msg.optJSONArray("peers") ?: JSONArray()
                 val ids = (0 until arr.length()).map { arr.getString(it) }
+                Log.i(TAG, "existing-peers: $ids")
                 listener.onExistingPeers(ids)
             }
-            "peer-joined" -> listener.onPeerJoined(msg.getString("id"))
+            "peer-joined" -> {
+                Log.i(TAG, "peer-joined: ${msg.getString("id")}")
+                listener.onPeerJoined(msg.getString("id"))
+            }
             "peer-left" -> listener.onPeerLeft(msg.getString("id"))
             "signal" -> listener.onSignal(msg.getString("from"), msg.getJSONObject("data"))
         }
@@ -107,7 +119,8 @@ class SignalingClient(
             .put("type", "signal")
             .put("to", toPeerId)
             .put("data", data)
-        socket?.send(msg.toString())
+        val sent = socket?.send(msg.toString()) ?: false
+        Log.d(TAG, "sendSignal to=$toPeerId kind=${data.optString("kind")} sent=$sent")
     }
 
     fun disconnect() {
@@ -115,5 +128,9 @@ class SignalingClient(
         mainHandler.removeCallbacksAndMessages(null)
         socket?.close(1000, "bye")
         socket = null
+    }
+
+    companion object {
+        private const val TAG = "SignalingClient"
     }
 }

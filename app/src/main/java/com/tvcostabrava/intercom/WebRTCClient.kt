@@ -1,6 +1,7 @@
 package com.tvcostabrava.intercom
 
 import android.content.Context
+import android.util.Log
 import org.json.JSONObject
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
@@ -74,6 +75,7 @@ class WebRTCClient(
     /** Llamar cuando llega existing-peers o peer-joined con un id nuevo. */
     fun connectToPeer(peerId: String, isInitiator: Boolean) {
         if (peerConnections.containsKey(peerId)) return
+        Log.i(TAG, "connectToPeer($peerId, isInitiator=$isInitiator)")
 
         val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
@@ -81,6 +83,7 @@ class WebRTCClient(
 
         val pc = peerConnectionFactory.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
             override fun onIceCandidate(candidate: IceCandidate) {
+                Log.d(TAG, "[$peerId] onIceCandidate: ${candidate.sdp}")
                 val data = JSONObject()
                     .put("kind", "ice-candidate")
                     .put("sdpMid", candidate.sdpMid)
@@ -94,21 +97,34 @@ class WebRTCClient(
             override fun onRemoveStream(stream: MediaStream) {}
             override fun onDataChannel(channel: org.webrtc.DataChannel) {}
             override fun onRenegotiationNeeded() {}
-            override fun onIceConnectionChange(state: PeerConnection.IceConnectionState) {}
-            override fun onIceConnectionReceivingChange(receiving: Boolean) {}
-            override fun onIceGatheringChange(state: PeerConnection.IceGatheringState) {}
-            override fun onSignalingChange(state: PeerConnection.SignalingState) {}
-            override fun onAddTrack(receiver: org.webrtc.RtpReceiver, streams: Array<out MediaStream>) {}
+            override fun onIceConnectionChange(state: PeerConnection.IceConnectionState) {
+                Log.i(TAG, "[$peerId] onIceConnectionChange: $state")
+            }
+            override fun onIceConnectionReceivingChange(receiving: Boolean) {
+                Log.i(TAG, "[$peerId] onIceConnectionReceivingChange: $receiving")
+            }
+            override fun onIceGatheringChange(state: PeerConnection.IceGatheringState) {
+                Log.i(TAG, "[$peerId] onIceGatheringChange: $state")
+            }
+            override fun onSignalingChange(state: PeerConnection.SignalingState) {
+                Log.i(TAG, "[$peerId] onSignalingChange: $state")
+            }
+            override fun onAddTrack(receiver: org.webrtc.RtpReceiver, streams: Array<out MediaStream>) {
+                Log.i(TAG, "[$peerId] onAddTrack")
+            }
             override fun onTrack(transceiver: org.webrtc.RtpTransceiver) {}
-        }) ?: return
+        }) ?: run {
+            Log.e(TAG, "createPeerConnection devolvio null para $peerId")
+            return
+        }
 
         pc.addTrack(localAudioTrack, listOf("local_stream"))
         peerConnections[peerId] = pc
 
         if (isInitiator) {
-            pc.createOffer(object : SdpObserverAdapter() {
+            pc.createOffer(object : SdpObserverAdapter("createOffer[$peerId]") {
                 override fun onCreateSuccess(desc: SessionDescription) {
-                    pc.setLocalDescription(SdpObserverAdapter(), desc)
+                    pc.setLocalDescription(SdpObserverAdapter("setLocalDescription(offer)[$peerId]"), desc)
                     val data = JSONObject()
                         .put("kind", "sdp")
                         .put("type", desc.type.canonicalForm())
@@ -121,6 +137,7 @@ class WebRTCClient(
 
     /** Llamar con lo que llega de SignalingClient.onSignal. */
     fun onRemoteSignal(peerId: String, data: JSONObject) {
+        Log.d(TAG, "[$peerId] onRemoteSignal kind=${data.optString("kind")}")
         val pc = peerConnections[peerId] ?: run {
             // Oferta de un peer que aun no conocemos: crear la conexion como no-iniciador.
             connectToPeer(peerId, isInitiator = false)
@@ -135,12 +152,12 @@ class WebRTCClient(
                     SessionDescription.Type.ANSWER
                 }
                 val desc = SessionDescription(type, data.getString("sdp"))
-                pc.setRemoteDescription(SdpObserverAdapter(), desc)
+                pc.setRemoteDescription(SdpObserverAdapter("setRemoteDescription($type)[$peerId]"), desc)
 
                 if (type == SessionDescription.Type.OFFER) {
-                    pc.createAnswer(object : SdpObserverAdapter() {
+                    pc.createAnswer(object : SdpObserverAdapter("createAnswer[$peerId]") {
                         override fun onCreateSuccess(answer: SessionDescription) {
-                            pc.setLocalDescription(SdpObserverAdapter(), answer)
+                            pc.setLocalDescription(SdpObserverAdapter("setLocalDescription(answer)[$peerId]"), answer)
                             val answerData = JSONObject()
                                 .put("kind", "sdp")
                                 .put("type", "answer")
@@ -173,10 +190,22 @@ class WebRTCClient(
         eglBase.release()
     }
 
-    private open class SdpObserverAdapter : SdpObserver {
-        override fun onCreateSuccess(desc: SessionDescription) {}
-        override fun onSetSuccess() {}
-        override fun onCreateFailure(error: String) {}
-        override fun onSetFailure(error: String) {}
+    private open class SdpObserverAdapter(private val label: String = "sdp") : SdpObserver {
+        override fun onCreateSuccess(desc: SessionDescription) {
+            Log.d(TAG, "$label onCreateSuccess")
+        }
+        override fun onSetSuccess() {
+            Log.d(TAG, "$label onSetSuccess")
+        }
+        override fun onCreateFailure(error: String) {
+            Log.e(TAG, "$label onCreateFailure: $error")
+        }
+        override fun onSetFailure(error: String) {
+            Log.e(TAG, "$label onSetFailure: $error")
+        }
+    }
+
+    companion object {
+        private const val TAG = "WebRTCClient"
     }
 }

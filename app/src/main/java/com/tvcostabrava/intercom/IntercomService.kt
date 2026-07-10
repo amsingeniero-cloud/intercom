@@ -13,6 +13,7 @@ import android.net.Network
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         override fun onAvailable(network: Network) {
             val previous = activeNetwork
             activeNetwork = network
+            Log.i(TAG, "networkCallback.onAvailable: $network (previous=$previous)")
             if (previous != null && previous != network) {
                 restartConnection(currentServerUrl())
             }
@@ -89,6 +91,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
      * al cambiar la URL del servidor desde Ajustes como al cambiar de red.
      */
     private fun restartConnection(url: String) {
+        Log.i(TAG, "restartConnection -> $url")
         signalingClient.disconnect()
         webRTCClient.dispose()
         connectedPeers.clear()
@@ -138,6 +141,7 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     // ---- SignalingClient.Listener ----
 
     override fun onExistingPeers(peerIds: List<String>) {
+        Log.i(TAG, "onExistingPeers: $peerIds (myId=$myId)")
         peerIds.forEach {
             connectedPeers.add(it)
             webRTCClient.connectToPeer(it, isInitiator = true)
@@ -146,12 +150,14 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     }
 
     override fun onPeerJoined(peerId: String) {
+        Log.i(TAG, "onPeerJoined: $peerId")
         // El peer nuevo nos hara una oferta; solo la registramos, no iniciamos nosotros.
         connectedPeers.add(peerId)
         publishState()
     }
 
     override fun onPeerLeft(peerId: String) {
+        Log.i(TAG, "onPeerLeft: $peerId")
         connectedPeers.remove(peerId)
         webRTCClient.removePeer(peerId)
         publishState()
@@ -162,10 +168,12 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
     }
 
     override fun onConnected() {
+        Log.i(TAG, "onConnected (myId=$myId)")
         _state.value = _state.value.copy(connectedToServer = true)
     }
 
     override fun onDisconnected() {
+        Log.w(TAG, "onDisconnected")
         _state.value = _state.value.copy(connectedToServer = false)
     }
 
@@ -215,5 +223,9 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         signalingClient.disconnect()
         webRTCClient.dispose()
         super.onDestroy()
+    }
+
+    companion object {
+        private const val TAG = "IntercomService"
     }
 }

@@ -365,46 +365,20 @@ private fun ChannelSwitch(label: String, active: Boolean, modifier: Modifier = M
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
     ) {
-        Box(
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(
+                id = if (active) R.drawable.channel_switch_on else R.drawable.channel_switch_off,
+            ),
+            contentDescription = label,
+            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
+                .width(46.dp)
+                .height(79.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(
-                    if (active) {
-                        Brush.linearGradient(listOf(RetroColors.TalkIdleStart, RetroColors.PrimaryContainer))
-                    } else {
-                        Brush.linearGradient(listOf(pal.surfaceContainerHigh, pal.surfaceContainerHigh))
-                    },
-                )
-                .border(
-                    1.dp,
-                    if (active) RetroColors.PrimaryContainer else pal.outlineVariant,
-                    RoundedCornerShape(6.dp),
-                )
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { currentOnClick() })
                 },
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 4.dp)
-                    .size(6.dp)
-                    .background(
-                        if (active) RetroColors.TxRed else pal.surfaceContainerLowest,
-                        CircleShape,
-                    )
-                    .then(
-                        if (active) {
-                            Modifier.border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape)
-                        } else {
-                            Modifier
-                        },
-                    ),
-            )
-        }
+        )
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,

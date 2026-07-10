@@ -47,17 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private data class ChannelDef(val id: String, val label: String)
-
-private val DEPARTMENT_CHANNELS = listOf(
-    ChannelDef("realizacion", "REALIZACIÓN"),
-    ChannelDef("camaras", "CÁMARAS"),
-    ChannelDef("produccion", "PRODUCCIÓN"),
-    ChannelDef("tecnica", "TÉCNICA"),
-    ChannelDef("periodistas", "PERIODISTAS"),
-)
-private const val TODOS_ID = "__todos__"
-
 /**
  * Calco del mockup Stitch "RADIO UNIT-82 | SIGNAL-84" (Walkie-Talkie Radio Alicante Libre).
  * Solo HABLAR y MANOS LIBRES son funcionales; LCD, LEDs TX/RX, corner-screws y barra
@@ -68,23 +57,23 @@ fun RetroWalkieScreen(
     onTalkPressed: (Boolean) -> Unit,
     onHandsFreeToggled: (Boolean) -> Unit,
     onOpenSettings: () -> Unit,
+    activeChannels: Set<String>,
     onChannelsChanged: (Set<String>) -> Unit,
 ) {
     var isTalking by remember { mutableStateOf(false) }
     var handsFree by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
-    var activeChannels by remember { mutableStateOf(setOf<String>()) }
     val pal = LocalRetroPalette.current
 
     val talking = isTalking || handsFree
 
     fun toggleChannel(channelId: String) {
         val allDeptIds = DEPARTMENT_CHANNELS.map { it.id }.toSet()
-        activeChannels = when (channelId) {
+        val newChannels = when (channelId) {
             TODOS_ID -> if (activeChannels.containsAll(allDeptIds)) emptySet() else allDeptIds
             else -> if (channelId in activeChannels) activeChannels - channelId else activeChannels + channelId
         }
-        onChannelsChanged(activeChannels)
+        onChannelsChanged(newChannels)
     }
 
     Box(

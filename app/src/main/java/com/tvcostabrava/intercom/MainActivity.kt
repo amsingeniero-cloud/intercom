@@ -12,6 +12,7 @@ import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +23,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -86,6 +90,12 @@ class MainActivity : ComponentActivity() {
             var isDark by remember {
                 mutableStateOf(SettingsStore.isDarkTheme(this@MainActivity))
             }
+            var role by remember {
+                mutableStateOf(SettingsStore.getRole(this@MainActivity))
+            }
+            var activeChannels by remember {
+                mutableStateOf(setOfNotNull(SettingsStore.getRole(this@MainActivity)))
+            }
             val palette = if (isDark) DarkRetroPalette else LightRetroPalette
 
             CompositionLocalProvider(LocalRetroPalette provides palette) {
@@ -99,6 +109,16 @@ class MainActivity : ComponentActivity() {
                                     isDark = dark
                                     SettingsStore.setDarkTheme(this@MainActivity, dark)
                                 },
+                                currentRole = role,
+                                onRoleChange = { newRole ->
+                                    val updated = activeChannels.toMutableSet()
+                                    role?.let { updated.remove(it) }
+                                    updated.add(newRole)
+                                    activeChannels = updated
+                                    role = newRole
+                                    SettingsStore.setRole(this@MainActivity, newRole)
+                                    service?.setActiveChannels(activeChannels)
+                                },
                                 onSave = { url ->
                                     SettingsStore.setServerUrl(this@MainActivity, url)
                                     service?.updateServerUrl(url)
@@ -111,7 +131,11 @@ class MainActivity : ComponentActivity() {
                                 onTalkPressed = { pressed -> service?.setPttPressed(pressed) },
                                 onHandsFreeToggled = { enabled -> service?.setHandsFree(enabled) },
                                 onOpenSettings = { showSettings = true },
-                                onChannelsChanged = { channels -> service?.setActiveChannels(channels) },
+                                activeChannels = activeChannels,
+                                onChannelsChanged = { channels ->
+                                    activeChannels = channels
+                                    service?.setActiveChannels(channels)
+                                },
                             )
                         }
                     }
@@ -144,6 +168,8 @@ fun SettingsScreen(
     initialUrl: String,
     isDark: Boolean,
     onThemeChange: (Boolean) -> Unit,
+    currentRole: String?,
+    onRoleChange: (String) -> Unit,
     onSave: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -153,16 +179,45 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
     ) {
+        Text(
+            text = "ROL",
+            color = pal.onSurface,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.sp,
+        )
+        Text(
+            text = "Tu departamento: es tu canal por defecto al abrir la app",
+            color = pal.onSurfaceVariant,
+            fontSize = 12.sp,
+            fontFamily = FontFamily.Monospace,
+            modifier = Modifier.padding(top = 6.dp, bottom = 14.dp),
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            DEPARTMENT_CHANNELS.forEach { channel ->
+                RoleOptionButton(
+                    label = channel.label,
+                    selected = channel.id == currentRole,
+                    onClick = { onRoleChange(channel.id) },
+                )
+            }
+        }
+
         Text(
             text = "ESTILO VISUAL",
             color = pal.onSurface,
             fontSize = 14.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 1.sp,
+            modifier = Modifier.padding(top = 28.dp),
         )
         Row(
             modifier = Modifier.padding(top = 10.dp, bottom = 28.dp),
@@ -242,6 +297,44 @@ fun SettingsScreen(
                 .height(52.dp),
         ) {
             Text("VOLVER", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        }
+    }
+}
+
+@Composable
+private fun RoleOptionButton(label: String, selected: Boolean, onClick: () -> Unit) {
+    val pal = LocalRetroPalette.current
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) RetroColors.PrimaryContainer else pal.surfaceContainerHigh,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(
+                        if (selected) RetroColors.OnPrimaryContainer else pal.outlineVariant,
+                        androidx.compose.foundation.shape.CircleShape,
+                    ),
+            )
+            Text(
+                text = label,
+                color = if (selected) RetroColors.OnPrimaryContainer else pal.onSurfaceVariant,
+                fontSize = 13.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                modifier = Modifier.padding(start = 12.dp),
+            )
         }
     }
 }

@@ -78,7 +78,10 @@ class IntercomService : Service(), SignalingClient.Listener, WebRTCClient.Signal
         connectivityManager = getSystemService(ConnectivityManager::class.java)
         connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
+        SettingsStore.getRole(this)?.let { activeChannels.add(it) }
+
         webRTCClient = WebRTCClient(applicationContext, this)
+        webRTCClient.updateMyChannels(activeChannels)
         signalingClient = SignalingClient(currentServerUrl(), myId, this)
         fetchTurnCredentialsThenConnect(currentServerUrl())
     }

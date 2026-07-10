@@ -170,10 +170,12 @@ private fun ChassisHeader(onOpenSettings: () -> Unit) {
             Text(
                 text = "RADIO UNIT-82",
                 color = RetroColors.PrimaryLight,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
+                letterSpacing = 1.sp,
+                maxLines = 1,
+                softWrap = false,
             )
         }
 
@@ -187,6 +189,8 @@ private fun ChassisHeader(onOpenSettings: () -> Unit) {
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp,
+                maxLines = 1,
+                softWrap = false,
                 modifier = Modifier.pointerInput(Unit) {
                     detectTapGestures(onTap = { onOpenSettings() })
                 },

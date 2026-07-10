@@ -37,12 +37,22 @@ class WebRTCClient(
 
     private val iceServers = listOf(
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
-        // TURN publico gratuito (Open Relay Project) para redes con NAT estricto / datos moviles
+        // TURN publico gratuito (Open Relay Project) para redes con NAT estricto / datos moviles.
+        // Se listan varias variantes (UDP/TCP, puertos 80/443) porque segun la red, alguna
+        // puede estar bloqueada; con varias, ICE prueba todas y usa la que funcione.
         PeerConnection.IceServer.builder("turn:openrelay.metered.ca:80")
             .setUsername("openrelayproject")
             .setPassword("openrelayproject")
             .createIceServer(),
+        PeerConnection.IceServer.builder("turn:openrelay.metered.ca:80?transport=tcp")
+            .setUsername("openrelayproject")
+            .setPassword("openrelayproject")
+            .createIceServer(),
         PeerConnection.IceServer.builder("turn:openrelay.metered.ca:443")
+            .setUsername("openrelayproject")
+            .setPassword("openrelayproject")
+            .createIceServer(),
+        PeerConnection.IceServer.builder("turn:openrelay.metered.ca:443?transport=tcp")
             .setUsername("openrelayproject")
             .setPassword("openrelayproject")
             .createIceServer(),
